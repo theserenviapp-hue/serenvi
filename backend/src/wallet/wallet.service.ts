@@ -18,7 +18,7 @@ export class WalletService {
     this.transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: this.configService.get('SMTP_EMAIL') || 'theserenvicompany@gmail.com',
+        user: this.configService.get('SMTP_EMAIL'),
         pass: this.configService.get('SMTP_PASSWORD'),
       },
     });

@@ -15,9 +15,9 @@ interface JwtPayload {
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private configService: ConfigService) {
-    const secret = configService.get('JWT_SECRET') || 'serenvi-default-secret-key-2024';
+    const secret = configService.get<string>('JWT_SECRET');
     if (!secret) {
-      throw new Error('JWT_SECRET must be set in environment');
+      throw new Error('JWT_SECRET environment variable must be set. Do not use default secrets.');
     }
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -31,6 +31,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!payload.userId || !payload.distributorId || !payload.email) {
       throw new UnauthorizedException('Invalid token structure');
     }
-    return { userId: payload.userId, distributorId: payload.distributorId, email: payload.email, isAdmin: payload.isAdmin || false };
+    return {
+      userId: payload.userId,
+      distributorId: payload.distributorId,
+      email: payload.email,
+      isAdmin: payload.isAdmin || false,
+    };
   }
 }

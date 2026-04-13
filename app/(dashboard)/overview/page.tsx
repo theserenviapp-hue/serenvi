@@ -10,10 +10,7 @@ export default function OverviewPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In production, get userId from auth context
-    const userId = localStorage.getItem('userId') || 'demo-user';
-    
-    fetch(`/api/members/me?userId=${userId}`)
+    fetch('/api/members/me')
       .then((res) => res.json())
       .then((data) => {
         setUserData(data.data);
@@ -67,34 +64,23 @@ export default function OverviewPage() {
               <p className="text-lg font-semibold text-green-600">{userData?.status}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Member Since</p>
-              <p className="text-lg font-semibold">
-                {new Date(userData?.createdAt).toLocaleDateString()}
-              </p>
+              <p className="text-sm text-gray-600">Email</p>
+              <p className="text-lg font-semibold">{userData?.email}</p>
             </div>
           </div>
         </Card>
 
         <Card title="Quick Actions">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <a
-              href="/shop"
-              className="bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg p-4 text-center transition"
-            >
+            <a href="/shop" className="bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg p-4 text-center transition">
               <div className="font-semibold text-blue-900">Shop Products</div>
               <p className="text-sm text-blue-700 mt-1">Purchase available products</p>
             </a>
-            <a
-              href="/wallet"
-              className="bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg p-4 text-center transition"
-            >
+            <a href="/wallet" className="bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg p-4 text-center transition">
               <div className="font-semibold text-green-900">Manage Wallet</div>
               <p className="text-sm text-green-700 mt-1">Withdraw or top up funds</p>
             </a>
-            <a
-              href="/team"
-              className="bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg p-4 text-center transition"
-            >
+            <a href="/team" className="bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg p-4 text-center transition">
               <div className="font-semibold text-purple-900">View Team</div>
               <p className="text-sm text-purple-700 mt-1">See your downline structure</p>
             </a>

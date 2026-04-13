@@ -1,55 +1,48 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextResponse } from 'next/server';
+import { requireDbUser } from '@/lib/auth';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const userId = request.nextUrl.searchParams.get('userId');
+    const user = await requireDbUser();
 
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'Missing userId' },
-        { status: 400 }
-      );
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
+    // Lazy-load relations
+    const { prisma } = await import('@/lib/prisma');
+    const fullUser = await prisma.user.findUnique({
+      where: { id: user.id },
       include: {
         wallet: true,
-        referrals: true,
-        products: true,
-        bonuses: true,
+        referrals: { select: { id: true } },
+        products: { select: { id: true } },
+        bonuses: { select: { amount: true } },
       },
     });
 
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'User not found' },
-        { status: 404 }
-      );
+    if (!fullUser) {
+      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
 
     return NextResponse.json({
       success: true,
       data: {
-        id: user.id,
-        memberId: user.memberId,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        rank: user.rank,
-        status: user.status,
-        wallet: user.wallet,
-        directReferrals: user.referrals.length,
-        totalPurchases: user.products.length,
-        totalBonuses: user.bonuses.reduce((sum, b) => sum + b.amount, 0),
+        id: fullUser.id,
+        memberId: fullUser.memberId,
+        name: fullUser.name,
+        email: fullUser.email,
+        phone: fullUser.phone,
+        rank: fullUser.rank,
+        status: fullUser.status,
+        isAdmin: fullUser.isAdmin,
+        wallet: fullUser.wallet,
+        directReferrals: fullUser.referrals.length,
+        totalPurchases: fullUser.products.length,
+        totalBonuses: fullUser.bonuses.reduce((sum, b) => sum + b.amount, 0),
       },
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === 'Unauthorized') {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('Error fetching member profile:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch profile' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: 'Failed to fetch profile' }, { status: 500 });
   }
 }

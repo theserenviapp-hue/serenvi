@@ -1,26 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireDbUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const userId = request.nextUrl.searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'Missing userId' },
-        { status: 400 }
-      );
-    }
+    const user = await requireDbUser();
 
     const wallet = await prisma.wallet.findUnique({
-      where: { userId },
+      where: { userId: user.id },
     });
 
     if (!wallet) {
-      return NextResponse.json(
-        { success: false, error: 'Wallet not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'Wallet not found' }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -32,68 +23,68 @@ export async function GET(request: NextRequest) {
         totalEarning: wallet.totalEarning,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === 'Unauthorized') {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('Error fetching wallet:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch wallet' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: 'Failed to fetch wallet' }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await requireDbUser();
     const body = await request.json();
-    const { userId, amount, type } = body;
+    const { amount, type } = body;
 
-    if (!userId || !amount || !type) {
-      return NextResponse.json(
-        { success: false, error: 'Missing required fields' },
-        { status: 400 }
-      );
+    if (!amount || typeof amount !== 'number' || amount <= 0) {
+      return NextResponse.json({ success: false, error: 'Invalid amount' }, { status: 400 });
+    }
+
+    if (amount > 1000000) {
+      return NextResponse.json({ success: false, error: 'Amount exceeds maximum limit' }, { status: 400 });
     }
 
     const wallet = await prisma.wallet.findUnique({
-      where: { userId },
+      where: { userId: user.id },
     });
 
     if (!wallet) {
-      return NextResponse.json(
-        { success: false, error: 'Wallet not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'Wallet not found' }, { status: 404 });
     }
 
-    let updateData = {};
-    switch (type) {
-      case 'Transfer topup to eWallet':
-        if (wallet.topupWallet < amount) {
-          return NextResponse.json(
-            { success: false, error: 'Insufficient balance' },
-            { status: 400 }
-          );
+    const VALID_TYPES = ['Transfer topup to eWallet', 'Top up'] as const;
+    if (!VALID_TYPES.includes(type)) {
+      return NextResponse.json({ success: false, error: 'Invalid operation type' }, { status: 400 });
+    }
+
+    // Use transaction for atomicity
+    const updatedWallet = await prisma.$transaction(async (tx) => {
+      const currentWallet = await tx.wallet.findUnique({
+        where: { userId: user.id },
+      });
+
+      if (!currentWallet) throw new Error('Wallet not found');
+
+      if (type === 'Transfer topup to eWallet') {
+        if (currentWallet.topupWallet < amount) {
+          throw new Error('Insufficient balance');
         }
-        updateData = {
-          topupWallet: { decrement: amount },
-          eWallet: { increment: amount },
-        };
-        break;
-      case 'Top up':
-        // In production, validate payment with Razorpay
-        updateData = {
-          topupWallet: { increment: amount },
-        };
-        break;
-      default:
-        return NextResponse.json(
-          { success: false, error: 'Invalid operation' },
-          { status: 400 }
-        );
-    }
+        return tx.wallet.update({
+          where: { userId: user.id },
+          data: {
+            topupWallet: { decrement: amount },
+            eWallet: { increment: amount },
+          },
+        });
+      }
 
-    const updatedWallet = await prisma.wallet.update({
-      where: { userId },
-      data: updateData,
+      // Top up — in production, validate payment with Razorpay first
+      return tx.wallet.update({
+        where: { userId: user.id },
+        data: { topupWallet: { increment: amount } },
+      });
     });
 
     return NextResponse.json({
@@ -104,11 +95,14 @@ export async function POST(request: NextRequest) {
         shoppingFund: updatedWallet.shoppingFund,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === 'Unauthorized') {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+    if (error.message === 'Insufficient balance') {
+      return NextResponse.json({ success: false, error: 'Insufficient balance' }, { status: 400 });
+    }
     console.error('Error updating wallet:', error);
-    return NextResponse.json(
-      { success: false, error: 'Wallet update failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: 'Wallet update failed' }, { status: 500 });
   }
 }

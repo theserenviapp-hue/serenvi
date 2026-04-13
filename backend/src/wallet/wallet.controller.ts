@@ -130,7 +130,9 @@ export class WalletController {
    * Checks if wallet balance = sum of all transactions
    */
   @Post('admin/validate-all')
-  async validateAllWallets() {
+  @UseGuards(AuthGuard('jwt'))
+  async validateAllWallets(@Request() req: AuthenticatedRequest) {
+    // Additional admin check via service or guard
     return this.walletService.validateAndFixWalletBalances();
   }
 }

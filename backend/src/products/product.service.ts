@@ -19,24 +19,48 @@ export class ProductService {
     }
   }
 
-  private downloadImage(url: string, filename: string): Promise<string> {
+  private validateImageUrl(url: string): void {
+    try {
+      const parsed = new URL(url);
+      // Only allow HTTP/HTTPS schemes
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        throw new BadRequestException('Only HTTP/HTTPS URLs allowed for images');
+      }
+      // Block internal/private IPs
+      const hostname = parsed.hostname.toLowerCase();
+      const blockedHosts = ['localhost', '127.0.0.1', '0.0.0.0', '::1', 'metadata.google.internal'];
+      if (blockedHosts.includes(hostname) || hostname.startsWith('10.') || hostname.startsWith('192.168.') || hostname.startsWith('172.')) {
+        throw new BadRequestException('Internal URLs are not allowed');
+      }
+    } catch (e) {
+      if (e instanceof BadRequestException) throw e;
+      throw new BadRequestException('Invalid image URL');
+    }
+  }
+
+  private downloadImage(url: string, filename: string, redirectCount = 0): Promise<string> {
+    if (redirectCount > 3) {
+      return Promise.reject(new Error('Too many redirects'));
+    }
+    this.validateImageUrl(url);
+
     return new Promise((resolve, reject) => {
       const filePath = path.join(this.imageDir, filename);
       const file = fs.createWriteStream(filePath);
       const client = url.startsWith('https') ? https : http;
 
-      client.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (response) => {
+      client.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 10000 }, (response) => {
         if (response.statusCode === 301 || response.statusCode === 302) {
           const redirectUrl = response.headers.location;
           if (redirectUrl) {
             file.close();
-            fs.unlinkSync(filePath);
-            return this.downloadImage(redirectUrl, filename).then(resolve).catch(reject);
+            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+            return this.downloadImage(redirectUrl, filename, redirectCount + 1).then(resolve).catch(reject);
           }
         }
         if (response.statusCode !== 200) {
           file.close();
-          fs.unlinkSync(filePath);
+          if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
           return reject(new Error(`Failed to download: ${response.statusCode}`));
         }
         response.pipe(file);

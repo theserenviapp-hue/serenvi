@@ -1,5 +1,3 @@
-// Prisma schema for Eloxa MLM Platform
-
 generator client {
   provider = "prisma-client"
 }
@@ -9,10 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Core User Model
 model User {
   id            String   @id @default(cuid())
-  memberId      String   @unique // e.g. "4143147639"
+  clerkId       String?  @unique
+  memberId      String   @unique
   name          String
   email         String   @unique
   phone         String
@@ -22,6 +20,8 @@ model User {
   referrals     User[]   @relation("Referrals")
   rank          Rank     @default(NOT_ACHIEVED)
   status        Status   @default(ACTIVE)
+  isAdmin       Boolean  @default(false)
+  deletedAt     DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -33,44 +33,46 @@ model User {
   @@index([referredById])
   @@index([email])
   @@index([memberId])
+  @@index([clerkId])
+  @@index([createdAt])
+  @@index([rank])
 }
 
-// Wallet Model
 model Wallet {
-  id             String  @id @default(cuid())
-  userId         String  @unique
-  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  eWallet        Float   @default(0)
-  topupWallet    Float   @default(0)
-  shoppingFund   Float   @default(0)
-  totalEarning   Float   @default(0)
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eWallet        Float    @default(0)
+  topupWallet    Float    @default(0)
+  shoppingFund   Float    @default(0)
+  totalEarning   Float    @default(0)
   updatedAt      DateTime @updatedAt
 
   @@index([userId])
 }
 
-// Product Model
 model Product {
   id          String          @id @default(cuid())
   name        String
   description String?
-  price       Float           // 299
-  fileUrl     String          // Cloudflare R2 URL
+  price       Float
+  fileUrl     String
   isActive    Boolean         @default(true)
+  deletedAt   DateTime?
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
   purchases   UserProduct[]
 
   @@index([isActive])
+  @@index([createdAt])
 }
 
-// User Product Purchases
 model UserProduct {
   id          String    @id @default(cuid())
   userId      String
   productId   String
   paidVia     PayMethod
-  utr         String?   // bank reference
+  utr         String?
   purchasedAt DateTime  @default(now())
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   product     Product   @relation(fields: [productId], references: [id])
@@ -80,11 +82,10 @@ model UserProduct {
   @@index([productId])
 }
 
-// Bonus Distribution
 model Bonus {
   id        String    @id @default(cuid())
   userId    String
-  type      BonusType // FAST_TRACK | STEP_UP | TALENT_DIVIDEND | LEADERSHIP | RANK
+  type      BonusType
   amount    Float
   date      DateTime  @default(now())
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -92,14 +93,15 @@ model Bonus {
   @@index([userId])
   @@index([type])
   @@index([date])
+  @@index([userId, type])
+  @@index([userId, date])
 }
 
-// Withdrawal Requests
 model Withdrawal {
   id           String              @id @default(cuid())
   userId       String
   amount       Float
-  netAmount    Float               // after 5% charge
+  netAmount    Float
   bankDetails  Json
   status       WithdrawalStatus    @default(PENDING)
   utr          String?
@@ -110,9 +112,9 @@ model Withdrawal {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+  @@index([userId, status])
 }
 
-// Enums
 enum Rank {
   NOT_ACHIEVED
   PERFORMER

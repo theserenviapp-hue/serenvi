@@ -11,10 +11,8 @@ export default function FastTrackPage() {
   const [summary, setSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const userId = localStorage.getItem('userId') || 'demo-user';
-
   useEffect(() => {
-    fetch(`/api/bonuses?userId=${userId}`)
+    fetch('/api/bonuses')
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
@@ -34,38 +32,16 @@ export default function FastTrackPage() {
       <DashboardNav />
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Bonuses</h1>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <StatCard
-            label="Fast Track"
-            value={`₹${summary?.fastTrack?.toFixed(2) || '0'}`}
-            color="green"
-          />
-          <StatCard
-            label="Step Up"
-            value={`₹${summary?.stepUp?.toFixed(2) || '0'}`}
-            color="blue"
-          />
-          <StatCard
-            label="Talent Dividend"
-            value={`₹${summary?.talentDividend?.toFixed(2) || '0'}`}
-            color="purple"
-          />
-          <StatCard
-            label="Total Bonuses"
-            value={`₹${summary?.total?.toFixed(2) || '0'}`}
-            color="orange"
-          />
+          <StatCard label="Fast Track" value={`₹${summary?.fastTrack?.toFixed(2) || '0'}`} color="green" />
+          <StatCard label="Step Up" value={`₹${summary?.stepUp?.toFixed(2) || '0'}`} color="blue" />
+          <StatCard label="Talent Dividend" value={`₹${summary?.talentDividend?.toFixed(2) || '0'}`} color="purple" />
+          <StatCard label="Total Bonuses" value={`₹${summary?.total?.toFixed(2) || '0'}`} color="orange" />
         </div>
-
         {loading ? (
-          <Card>
-            <div className="text-center py-12">Loading bonuses...</div>
-          </Card>
+          <Card><div className="text-center py-12">Loading bonuses...</div></Card>
         ) : (
-          <Card title="Fast Track Bonuses">
-            <BonusTable bonuses={bonuses} />
-          </Card>
+          <Card title="Fast Track Bonuses"><BonusTable bonuses={bonuses} /></Card>
         )}
       </div>
     </>

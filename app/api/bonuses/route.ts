@@ -1,25 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import { requireDbUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const userId = request.nextUrl.searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'Missing userId' },
-        { status: 400 }
-      );
-    }
+    const user = await requireDbUser();
 
     const bonuses = await prisma.bonus.findMany({
-      where: { userId },
+      where: { userId: user.id },
       orderBy: { date: 'desc' },
-      include: {
-        user: {
-          select: { name: true },
-        },
-      },
+      take: 200,
     });
 
     const summary = {
@@ -52,11 +42,11 @@ export async function GET(request: NextRequest) {
         })),
       },
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === 'Unauthorized') {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('Error fetching bonuses:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch bonuses' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: 'Failed to fetch bonuses' }, { status: 500 });
   }
 }
