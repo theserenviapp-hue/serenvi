@@ -1,5 +1,4 @@
 import { prisma } from '../prisma';
-import { startOfDay, endOfDay } from 'date-fns';
 
 /**
  * Distribute Fast Track Bonus
@@ -8,8 +7,8 @@ import { startOfDay, endOfDay } from 'date-fns';
  */
 export async function distributeFastTrackBonus() {
   const today = new Date();
-  const startOfToday = startOfDay(today);
-  const endOfToday = endOfDay(today);
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
+  const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
 
   console.log('[Fast Track] Starting daily distribution...');
 
@@ -56,7 +55,7 @@ export async function distributeFastTrackBonus() {
       },
     });
 
-    const eligibleMembers = eligible.filter((user) => user.referrals.length >= 3);
+    const eligibleMembers = eligible.filter((user: any) => user.referrals.length >= 3);
 
     if (eligibleMembers.length === 0) {
       console.log('[Fast Track] No eligible members');
@@ -68,7 +67,7 @@ export async function distributeFastTrackBonus() {
     // 3. Calculate weighted units and each member's share
     // multiplier = 3 (base) + (directReferrals - 3) for each extra direct
     let totalWeightedUnits = 0;
-    const memberWeights = eligibleMembers.map((member) => {
+    const memberWeights = eligibleMembers.map((member: any) => {
       // Assume each user has a packageAmount (for simplicity, using fixed amount)
       const packageAmount = 299; // Standard product price
       const directCount = member.referrals.length;

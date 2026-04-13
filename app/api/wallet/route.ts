@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Use transaction for atomicity
-    const updatedWallet = await prisma.$transaction(async (tx) => {
+    const updatedWallet = await prisma.$transaction(async (tx: any) => {
       const currentWallet = await tx.wallet.findUnique({
         where: { userId: user.id },
       });

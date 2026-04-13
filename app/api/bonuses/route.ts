@@ -21,7 +21,7 @@ export async function GET() {
       total: 0,
     };
 
-    bonuses.forEach((bonus) => {
+    bonuses.forEach((bonus: { type: string; amount: number }) => {
       if (bonus.type === 'FAST_TRACK') summary.fastTrack += bonus.amount;
       if (bonus.type === 'STEP_UP') summary.stepUp += bonus.amount;
       if (bonus.type === 'TALENT_DIVIDEND') summary.talentDividend += bonus.amount;
@@ -34,7 +34,7 @@ export async function GET() {
       success: true,
       data: {
         summary,
-        bonuses: bonuses.map((b) => ({
+        bonuses: bonuses.map((b: any) => ({
           id: b.id,
           type: b.type,
           amount: b.amount,

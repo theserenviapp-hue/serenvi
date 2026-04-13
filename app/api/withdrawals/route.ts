@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     const netAmount = Math.round((amount - charge) * 100) / 100;
 
     // Atomic transaction: create withdrawal + deduct from wallet
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       const wallet = await tx.wallet.findUnique({ where: { userId: user.id } });
       if (!wallet) throw new Error('Wallet not found');
       if (wallet.eWallet < amount) throw new Error('Insufficient balance');

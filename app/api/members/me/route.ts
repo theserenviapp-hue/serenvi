@@ -35,7 +35,7 @@ export async function GET() {
         wallet: fullUser.wallet,
         directReferrals: fullUser.referrals.length,
         totalPurchases: fullUser.products.length,
-        totalBonuses: fullUser.bonuses.reduce((sum, b) => sum + b.amount, 0),
+        totalBonuses: fullUser.bonuses.reduce((sum: number, b: { amount: number }) => sum + b.amount, 0),
       },
     });
   } catch (error: any) {

@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Atomic: check product + check duplicate + create purchase
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       const product = await tx.product.findUnique({ where: { id: productId } });
       if (!product || !product.isActive) {
         throw new Error('Product not found');

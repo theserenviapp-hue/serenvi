@@ -7,7 +7,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
       <SignIn
         routing="hash"
-        afterSignInUrl="/overview"
+        forceRedirectUrl="/overview"
         signUpUrl="/register"
       />
     </div>

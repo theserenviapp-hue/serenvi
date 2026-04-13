@@ -7,7 +7,7 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-purple-900 flex items-center justify-center py-12 px-4">
       <SignUp
         routing="hash"
-        afterSignUpUrl="/overview"
+        forceRedirectUrl="/overview"
         signInUrl="/login"
       />
     </div>

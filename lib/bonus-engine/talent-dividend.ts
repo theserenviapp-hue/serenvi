@@ -1,5 +1,4 @@
 import { prisma } from '../prisma';
-import { startOfMonth, endOfMonth, subMonths } from 'date-fns';
 
 /**
  * Talent Dividend Bonus
@@ -8,9 +7,9 @@ import { startOfMonth, endOfMonth, subMonths } from 'date-fns';
  */
 export async function distributeTalentDividend() {
   const today = new Date();
-  const lastMonth = subMonths(today, 1);
-  const startOfLastMonth = startOfMonth(lastMonth);
-  const endOfLastMonth = endOfMonth(lastMonth);
+  const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  const startOfLastMonth = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1, 0, 0, 0, 0);
+  const endOfLastMonth = new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0, 23, 59, 59, 999);
 
   console.log('[Talent Dividend] Starting monthly distribution...');
 
@@ -42,7 +41,7 @@ export async function distributeTalentDividend() {
 
     // 2. Calculate team sales for each member
     let totalTeamSales = 0;
-    const memberSales = members.map((member) => {
+    const memberSales = members.map((member: any) => {
       let teamSales = 0;
 
       // Calculate sales from direct referrals
