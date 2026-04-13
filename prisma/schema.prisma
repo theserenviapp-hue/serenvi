@@ -1,0 +1,148 @@
+// Prisma schema for Eloxa MLM Platform
+
+generator client {
+  provider = "prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Core User Model
+model User {
+  id            String   @id @default(cuid())
+  memberId      String   @unique // e.g. "4143147639"
+  name          String
+  email         String   @unique
+  phone         String
+  passwordHash  String?
+  referredById  String?
+  referredBy    User?    @relation("Referrals", fields: [referredById], references: [id])
+  referrals     User[]   @relation("Referrals")
+  rank          Rank     @default(NOT_ACHIEVED)
+  status        Status   @default(ACTIVE)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  wallet        Wallet?
+  products      UserProduct[]
+  bonuses       Bonus[]
+  withdrawals   Withdrawal[]
+
+  @@index([referredById])
+  @@index([email])
+  @@index([memberId])
+}
+
+// Wallet Model
+model Wallet {
+  id             String  @id @default(cuid())
+  userId         String  @unique
+  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eWallet        Float   @default(0)
+  topupWallet    Float   @default(0)
+  shoppingFund   Float   @default(0)
+  totalEarning   Float   @default(0)
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// Product Model
+model Product {
+  id          String          @id @default(cuid())
+  name        String
+  description String?
+  price       Float           // 299
+  fileUrl     String          // Cloudflare R2 URL
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  purchases   UserProduct[]
+
+  @@index([isActive])
+}
+
+// User Product Purchases
+model UserProduct {
+  id          String    @id @default(cuid())
+  userId      String
+  productId   String
+  paidVia     PayMethod
+  utr         String?   // bank reference
+  purchasedAt DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product     Product   @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
+}
+
+// Bonus Distribution
+model Bonus {
+  id        String    @id @default(cuid())
+  userId    String
+  type      BonusType // FAST_TRACK | STEP_UP | TALENT_DIVIDEND | LEADERSHIP | RANK
+  amount    Float
+  date      DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([date])
+}
+
+// Withdrawal Requests
+model Withdrawal {
+  id           String              @id @default(cuid())
+  userId       String
+  amount       Float
+  netAmount    Float               // after 5% charge
+  bankDetails  Json
+  status       WithdrawalStatus    @default(PENDING)
+  utr          String?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Enums
+enum Rank {
+  NOT_ACHIEVED
+  PERFORMER
+  CHAMPION
+  INFLUENCER
+  GAMER
+  WORLD_SHAKER
+}
+
+enum BonusType {
+  FAST_TRACK
+  STEP_UP
+  TALENT_DIVIDEND
+  LEADERSHIP
+  RANK
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+enum PayMethod {
+  BANK
+  ADMIN_FREE
+  WALLET
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
