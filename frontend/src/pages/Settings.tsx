@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useClerk } from '@clerk/clerk-react';
 import api from '../services/api';
 
 interface ProfileData {
@@ -35,7 +35,6 @@ const Settings: React.FC = () => {
   const [otp, setOtp] = useState('');
   const [newBank, setNewBank] = useState({ bankAccount: '', bankIFSC: '', bankAccountHolder: '' });
   const [bankUpdating, setBankUpdating] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -167,10 +166,10 @@ const Settings: React.FC = () => {
     }
   };
 
+  const { signOut } = useClerk();
   const handleLogout = () => {
-    localStorage.removeItem('access_token');
     localStorage.removeItem('distributorId');
-    navigate('/login');
+    signOut({ redirectUrl: '/login' });
   };
 
   return (

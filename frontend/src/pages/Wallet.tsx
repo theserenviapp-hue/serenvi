@@ -11,7 +11,7 @@ interface WalletData {
 }
 
 const Wallet: React.FC = () => {
-  const { wallet, loading, error } = useWallet();
+  const { wallet, loading } = useWallet();
   const [walletData, setWalletData] = useState<WalletData | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'deposit' | 'transfer' | 'withdraw'>('overview');
   

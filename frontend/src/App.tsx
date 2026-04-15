@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { SignedIn, SignedOut, useAuth, useUser } from '@clerk/clerk-react';
 import Layout from './components/Common/Layout';
-import PrivateRoute from './components/Common/PrivateRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -16,56 +16,53 @@ import History from './pages/History';
 import Settings from './pages/Settings';
 import UserProfile from './pages/UserProfile';
 import Admin from './pages/Admin';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
+import { setTokenGetter } from './services/api';
+
+const TokenSync: React.FC = () => {
+  const { getToken } = useAuth();
+  const { user } = useUser();
+  React.useEffect(() => {
+    setTokenGetter(() => getToken());
+  }, [getToken]);
+  React.useEffect(() => {
+    if (user?.id) {
+      // Backend resolves Clerk userId to distributor record
+      localStorage.setItem('distributorId', user.id);
+    }
+  }, [user?.id]);
+  return null;
+};
 
 const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    !!localStorage.getItem('access_token'),
-  );
-
-  useEffect(() => {
-    const handleStorageChange = () => {
-      setIsAuthenticated(!!localStorage.getItem('access_token'));
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-  if (isAuthenticated) {
-    return (
-      <Router>
-        <Layout>
-          <Routes>
-            <Route path="/dashboard" element={<PrivateRoute component={Dashboard} />} />
-            <Route path="/achievements" element={<PrivateRoute component={Achievements} />} />
-            <Route path="/wallet" element={<PrivateRoute component={Wallet} />} />
-            <Route path="/shop" element={<PrivateRoute component={Shop} />} />
-            <Route path="/product/:id" element={<PrivateRoute component={ProductDetail} />} />
-            <Route path="/cart" element={<PrivateRoute component={Cart} />} />
-            <Route path="/checkout" element={<PrivateRoute component={Checkout} />} />
-            <Route path="/team" element={<PrivateRoute component={Team} />} />
-            <Route path="/history" element={<PrivateRoute component={History} />} />
-            <Route path="/settings" element={<PrivateRoute component={Settings} />} />
-            <Route path="/profile/:id" element={<PrivateRoute component={UserProfile} />} />
-            <Route path="/admin" element={<PrivateRoute component={Admin} />} />
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
-        </Layout>
-      </Router>
-    );
-  }
-
   return (
     <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/" element={<Navigate to="/login" replace />} />
-      </Routes>
+      <TokenSync />
+      <SignedIn>
+        <Layout>
+          <Routes>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/achievements" element={<Achievements />} />
+            <Route path="/wallet" element={<Wallet />} />
+            <Route path="/shop" element={<Shop />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/team" element={<Team />} />
+            <Route path="/history" element={<History />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/profile/:id" element={<UserProfile />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </Layout>
+      </SignedIn>
+      <SignedOut>
+        <Routes>
+          <Route path="/login/*" element={<Login />} />
+          <Route path="/register/*" element={<Register />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </SignedOut>
     </Router>
   );
 };

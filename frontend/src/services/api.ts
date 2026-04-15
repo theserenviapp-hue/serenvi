@@ -1,79 +1,45 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
-interface AuthResponse {
-  access_token: string;
-  distributor: {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-    rank: string;
-    referralCode: string;
-  };
-}
+// Token getter set by App.tsx via Clerk's useAuth hook
+let tokenGetter: (() => Promise<string | null>) | null = null;
+
+export const setTokenGetter = (getter: () => Promise<string | null>) => {
+  tokenGetter = getter;
+};
 
 class ApiClient {
   private client: AxiosInstance;
 
   constructor() {
     const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
-    
+
     this.client = axios.create({
       baseURL,
       headers: { 'Content-Type': 'application/json' },
     });
 
-    // Attach authorization header
-    this.client.interceptors.request.use((config) => {
-      const token = localStorage.getItem('access_token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+    // Attach Clerk session token to every request
+    this.client.interceptors.request.use(async (config) => {
+      if (tokenGetter) {
+        const token = await tokenGetter();
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
       }
       return config;
     });
 
-    // Handle responses
+    // Handle 401 -> Clerk handles redirect via SignedOut
     this.client.interceptors.response.use(
       (response) => response,
       (error: AxiosError) => {
-        if (error.response?.status === 401) {
-          localStorage.removeItem('access_token');
-          window.location.href = '/login';
-        }
         return Promise.reject(error);
       }
     );
   }
 
-  // AUTH ENDPOINTS
-  async register(
-    email: string,
-    password: string,
-    name: string,
-    phone: string,
-    sponsorId?: string
-  ): Promise<AuthResponse> {
-    const { data } = await this.client.post('/auth/register', {
-      email,
-      password,
-      name,
-      phone,
-      sponsorId,
-    });
-    localStorage.setItem('access_token', data.access_token);
-    localStorage.setItem('distributorId', data.distributor.id);
-    return data;
-  }
-
-  async login(email: string, password: string): Promise<AuthResponse> {
-    const { data } = await this.client.post('/auth/login', { email, password });
-    localStorage.setItem('access_token', data.access_token);
-    localStorage.setItem('distributorId', data.distributor.id);
-    return data;
-  }
-
   // GENERIC METHODS
-  async post(endpoint: string, payload: any) {
+  async post(endpoint: string, payload?: any) {
     const { data } = await this.client.post(endpoint, payload);
     return { data };
   }
@@ -93,6 +59,7 @@ class ApiClient {
     return { data };
   }
 
+  // PROFILE
   async getProfile(distributorId: string) {
     const { data } = await this.client.get(`/distributors/${distributorId}`);
     return data;
@@ -118,13 +85,9 @@ class ApiClient {
     return data;
   }
 
-  // SALES ENDPOINTS
+  // SALES
   async createSale(productId: string, quantity: number, paymentMethod: string) {
-    const { data } = await this.client.post('/sales', {
-      productId,
-      quantity,
-      paymentMethod,
-    });
+    const { data } = await this.client.post('/sales', { productId, quantity, paymentMethod });
     return data;
   }
 
@@ -138,11 +101,9 @@ class ApiClient {
     return data;
   }
 
-  // PRODUCTS ENDPOINTS
+  // PRODUCTS
   async getProducts(category?: string, skip = 0, take = 20) {
-    const { data } = await this.client.get('/products', {
-      params: { category, skip, take },
-    });
+    const { data } = await this.client.get('/products', { params: { category, skip, take } });
     return data;
   }
 
@@ -151,7 +112,7 @@ class ApiClient {
     return data;
   }
 
-  // WALLET ENDPOINTS
+  // WALLET
   async getWallet() {
     const { data } = await this.client.get('/wallet');
     return data;

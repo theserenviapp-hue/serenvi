@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
+import { useClerk, useUser, UserButton } from '@clerk/clerk-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -8,28 +9,19 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const navigate = useNavigate();
   const location = useLocation();
+  const { signOut } = useClerk();
+  const { user } = useUser();
 
   const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    navigate('/login');
+    signOut({ redirectUrl: '/login' });
   };
 
   const isActive = (path: string) => {
     return location.pathname === path ? 'bg-blue-700' : '';
   };
 
-  const isAdmin = (() => {
-    try {
-      const token = localStorage.getItem('access_token');
-      if (!token) return false;
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.isAdmin === true;
-    } catch {
-      return false;
-    }
-  })();
+  const isAdmin = (user?.publicMetadata as any)?.role === 'admin';
 
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: '📊' },
@@ -105,9 +97,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="w-1 h-6 bg-gradient-to-b from-cyan-400 to-blue-500 rounded"></div>
             <h2 className="text-xl font-bold text-slate-100">SERENVI MLM Platform</h2>
           </div>
-          <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg shadow-cyan-500/30">
-            👤
-          </div>
+          <UserButton afterSignOutUrl="/login" />
         </div>
 
         {/* Content */}

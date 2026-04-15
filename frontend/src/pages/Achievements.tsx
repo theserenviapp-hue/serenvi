@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 
 interface Achievement {
   rank: string;
@@ -42,14 +42,7 @@ const Achievements: React.FC = () => {
   const fetchAchievements = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('access_token');
-      if (!token) {
-        setError('Not authenticated. Please log in.');
-        return;
-      }
-      const response = await axios.get('http://localhost:3001/achievements/progress', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get('/achievements/progress');
       setData(response.data);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load achievements');
@@ -61,16 +54,7 @@ const Achievements: React.FC = () => {
   const claimAchievement = async (rankName: string) => {
     try {
       setClaiming(rankName);
-      const token = localStorage.getItem('access_token');
-      if (!token) {
-        alert('Not authenticated. Please log in.');
-        return;
-      }
-      const response = await axios.post(
-        `http://localhost:3001/achievements/claim/${rankName}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+      const response = await api.post(`/achievements/claim/${rankName}`);
       
       // Refresh achievements
       await fetchAchievements();

@@ -60,6 +60,7 @@ const Admin: React.FC = () => {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
   const loadData = async () => {
