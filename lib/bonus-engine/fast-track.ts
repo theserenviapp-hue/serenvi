@@ -14,21 +14,20 @@ export async function distributeFastTrackBonus() {
 
   try {
     // 1. Get total product sales value for today
-    const todaySales = await prisma.userProduct.aggregate({
+    const todaysPurchases = await prisma.userProduct.findMany({
       where: {
         purchasedAt: {
           gte: startOfToday,
           lte: endOfToday,
         },
       },
-      _sum: {
-        product: {
-          price: true,
-        },
-      },
+      include: { product: { select: { price: true } } },
     });
 
-    const totalSalesValue = todaySales._sum.product?.price || 0;
+    const totalSalesValue = todaysPurchases.reduce(
+      (sum: number, p: { product: { price: number } }) => sum + p.product.price,
+      0
+    );
     const fastTrackPool = totalSalesValue * 0.4; // 40% goes to fast track pool
 
     console.log(`[Fast Track] Total sales: ${totalSalesValue}, Pool: ${fastTrackPool}`);
