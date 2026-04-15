@@ -1,5 +1,5 @@
 import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { ClerkGuard } from '../common/clerk.guard';
 import { PaymentService } from './payment.service';
 
 interface AuthenticatedRequest extends Request {
@@ -7,7 +7,7 @@ interface AuthenticatedRequest extends Request {
 }
 
 @Controller('payments')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(ClerkGuard)
 export class PaymentController {
   constructor(private paymentService: PaymentService) {}
 

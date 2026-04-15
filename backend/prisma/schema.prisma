@@ -17,13 +17,16 @@ datasource db {
 model User {
   id                String    @id @default(cuid())
   email             String    @unique
-  password          String    // bcrypt hashed
+  password          String    // bcrypt hashed (legacy; empty for Clerk users)
+  clerkUserId       String?   @unique
   isAdmin           Boolean   @default(false)
   resetToken        String?
   resetTokenExpiry  DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   distributor       Distributor?
+
+  @@index([clerkUserId])
 }
 
 // ===========================

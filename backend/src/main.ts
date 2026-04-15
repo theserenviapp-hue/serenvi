@@ -8,6 +8,10 @@ import rateLimit from 'express-rate-limit';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Render/Vercel/Heroku etc put us behind a reverse proxy; required for
+  // rate-limit to see real client IPs and for correct req.secure detection.
+  app.getHttpAdapter().getInstance().set('trust proxy', 1);
+
   // === SECURITY MIDDLEWARE ===
   
   // 1. Helmet - Set security HTTP headers

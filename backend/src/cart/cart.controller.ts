@@ -1,9 +1,9 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Req } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { ClerkGuard } from '../common/clerk.guard';
 import { CartService } from './cart.service';
 
 @Controller('cart')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(ClerkGuard)
 export class CartController {
   constructor(private cartService: CartService) {}
 

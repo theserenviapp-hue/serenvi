@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { SignedIn, SignedOut, useAuth, useUser } from '@clerk/clerk-react';
+import { SignedIn, SignedOut, useAuth } from '@clerk/clerk-react';
 import Layout from './components/Common/Layout';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -17,19 +17,19 @@ import Settings from './pages/Settings';
 import UserProfile from './pages/UserProfile';
 import Admin from './pages/Admin';
 import { setTokenGetter } from './services/api';
+import { useMe } from './hooks/useMe';
 
 const TokenSync: React.FC = () => {
   const { getToken } = useAuth();
-  const { user } = useUser();
   React.useEffect(() => {
     setTokenGetter(() => getToken());
   }, [getToken]);
-  React.useEffect(() => {
-    if (user?.id) {
-      // Backend resolves Clerk userId to distributor record
-      localStorage.setItem('distributorId', user.id);
-    }
-  }, [user?.id]);
+  return null;
+};
+
+/** Runs /me on Clerk sign-in; stashes distributorId in localStorage. */
+const MeBoot: React.FC = () => {
+  useMe();
   return null;
 };
 
@@ -38,6 +38,7 @@ const App: React.FC = () => {
     <Router>
       <TokenSync />
       <SignedIn>
+        <MeBoot />
         <Layout>
           <Routes>
             <Route path="/dashboard" element={<Dashboard />} />

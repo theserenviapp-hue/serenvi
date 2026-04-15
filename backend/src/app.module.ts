@@ -5,6 +5,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
 import { DatabaseModule } from './database/database.module';
+import { CommonModule } from './common/common.module';
+import { MeModule } from './me/me.module';
+import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
 import { SalesModule } from './sales/sales.module';
 import { CommissionModule } from './commission/commission.module';
@@ -26,6 +29,9 @@ import { JwtStrategy } from './common/jwt.strategy';
     }),
     ScheduleModule.forRoot(),
     DatabaseModule,
+    CommonModule,
+    MeModule,
+    HealthModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'default-secret',
