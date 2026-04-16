@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowRight, Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 import api from '../services/api';
 
 interface CartItem {
@@ -16,6 +17,8 @@ interface CartItem {
   };
 }
 
+const formatINR = (n: number) => `₹${Math.round(n).toLocaleString('en-IN')}`;
+
 const Cart: React.FC = () => {
   const navigate = useNavigate();
   const [items, setItems] = useState<CartItem[]>([]);
@@ -24,31 +27,29 @@ const Cart: React.FC = () => {
 
   const fetchCart = async () => {
     try {
-      const response = await api.get('/cart');
-      setItems(response.data);
-    } catch (error) {
-      console.error('Failed to fetch cart', error);
+      const res = await api.get('/cart');
+      setItems(res.data);
+    } catch {
+      // ignore
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchCart();
-  }, []);
+  useEffect(() => { fetchCart(); }, []);
 
   const updateQuantity = async (productId: string, quantity: number) => {
     setUpdating(productId);
     try {
       if (quantity <= 0) {
         await api.delete(`/cart/${productId}`);
-        setItems(items.filter(i => i.productId !== productId));
+        setItems(items.filter((i) => i.productId !== productId));
       } else {
         await api.put('/cart/update', { productId, quantity });
-        setItems(items.map(i => i.productId === productId ? { ...i, quantity } : i));
+        setItems(items.map((i) => (i.productId === productId ? { ...i, quantity } : i)));
       }
-    } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to update');
+    } catch (e: any) {
+      alert(e.response?.data?.message || 'Failed to update');
     } finally {
       setUpdating(null);
     }
@@ -58,183 +59,180 @@ const Cart: React.FC = () => {
     setUpdating(productId);
     try {
       await api.delete(`/cart/${productId}`);
-      setItems(items.filter(i => i.productId !== productId));
-    } catch (error) {
-      console.error('Failed to remove item', error);
+      setItems(items.filter((i) => i.productId !== productId));
     } finally {
       setUpdating(null);
     }
   };
 
   const clearCart = async () => {
-    try {
-      await api.delete('/cart');
-      setItems([]);
-    } catch (error) {
-      console.error('Failed to clear cart', error);
-    }
+    if (!window.confirm('Empty your entire bag?')) return;
+    await api.delete('/cart').catch(() => {});
+    setItems([]);
   };
 
-  const totalPrice = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+  const subtotal = items.reduce((s, i) => s + Number(i.product.price) * i.quantity, 0);
+  const totalItems = items.reduce((s, i) => s + i.quantity, 0);
+  const shipping = subtotal >= 1999 || subtotal === 0 ? 0 : 99;
+  const total = subtotal + shipping;
 
   const handleCheckout = () => {
-    if (items.length === 0) return;
-    const cartItems = items.map(item => ({
-      productId: item.productId,
-      name: item.product.name,
-      price: item.product.price,
-      quantity: item.quantity,
+    if (!items.length) return;
+    const cartItems = items.map((i) => ({
+      productId: i.productId,
+      name: i.product.name,
+      price: i.product.price,
+      quantity: i.quantity,
     }));
     navigate('/checkout', { state: { cartItems } });
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-pulse">
+        <div className="lg:col-span-2 space-y-3">
+          {[0, 1, 2].map((i) => <div key={i} className="h-28 skeleton rounded-pebble" />)}
+        </div>
+        <div className="h-48 skeleton rounded-pebble" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="animate-fade-up">
+      <header className="flex items-end justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500 bg-clip-text text-transparent">
-            🛒 Your Cart
+          <div className="eyebrow">Your bag</div>
+          <h1 className="font-display text-display-sm md:text-display mt-2">
+            {totalItems} {totalItems === 1 ? 'piece' : 'pieces'}<span className="text-saffron">.</span>
           </h1>
-          <p className="text-slate-400 mt-1">{totalItems} {totalItems === 1 ? 'item' : 'items'}</p>
         </div>
         {items.length > 0 && (
-          <button
-            onClick={clearCart}
-            className="px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition"
-          >
-            Clear All
+          <button onClick={clearCart} className="btn-ghost text-rose hover:bg-rose/10">
+            <Trash2 size={16} /> Empty bag
           </button>
         )}
-      </div>
+      </header>
 
       {items.length === 0 ? (
-        <div className="text-center py-20 space-y-4">
-          <span className="text-7xl block">🛒</span>
-          <p className="text-slate-400 text-xl">Your cart is empty</p>
-          <button
-            onClick={() => navigate('/shop')}
-            className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-xl hover:from-cyan-600 hover:to-blue-700 transition shadow-lg shadow-cyan-500/20"
-          >
-            Continue Shopping
+        <div className="text-center py-24 border border-dashed border-ink/15 rounded-pebble bg-paper">
+          <ShoppingBag size={32} className="mx-auto text-ash mb-3" />
+          <p className="font-display text-2xl text-ink">Your bag is empty.</p>
+          <p className="text-ash mt-1">Let&apos;s find something you&apos;ll love.</p>
+          <button onClick={() => navigate('/shop')} className="btn-primary mt-6">
+            Browse the shop <ArrowRight size={16} />
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
-          {/* Cart Items */}
-          {items.map((item) => (
-            <div
-              key={item.id}
-              className="rounded-xl border border-cyan-500/20 bg-gradient-to-br from-slate-800/50 to-slate-900/50 p-4 flex gap-4 items-center hover:border-cyan-500/40 transition"
-            >
-              {/* Image */}
-              <div
-                className="w-24 h-24 rounded-lg overflow-hidden bg-slate-800 flex-shrink-0 cursor-pointer"
-                onClick={() => navigate(`/product/${item.productId}`)}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Items */}
+          <div className="lg:col-span-2 space-y-3">
+            {items.map((item) => (
+              <article
+                key={item.id}
+                className="flex gap-4 p-4 bg-paper border border-ink/10 rounded-pebble hover:border-ink/25 transition"
               >
-                {item.product.imageUrl ? (
-                  <img src={item.product.imageUrl.split(',')[0].trim()} alt={item.product.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-3xl">📦</div>
+                <button
+                  onClick={() => navigate(`/product/${item.productId}`)}
+                  className="w-24 h-28 rounded-md overflow-hidden bg-sand flex-shrink-0"
+                >
+                  {item.product.imageUrl ? (
+                    <img
+                      src={item.product.imageUrl.split(',')[0].trim()}
+                      alt={item.product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-ash font-display italic">—</div>
+                  )}
+                </button>
+
+                <div className="flex-1 min-w-0 flex flex-col">
+                  <div className="eyebrow">{item.product.category}</div>
+                  <h3
+                    className="mt-1 font-medium text-ink truncate cursor-pointer hover:underline underline-offset-4 decoration-saffron"
+                    onClick={() => navigate(`/product/${item.productId}`)}
+                  >
+                    {item.product.name}
+                  </h3>
+
+                  <div className="mt-auto flex items-center justify-between gap-3 pt-3">
+                    <div className="inline-flex items-center border border-ink/15 rounded-pebble">
+                      <button
+                        onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                        disabled={updating === item.productId}
+                        className="w-9 h-9 flex items-center justify-center hover:bg-ink/5 disabled:opacity-50"
+                        aria-label="Decrease"
+                      >
+                        <Minus size={14} />
+                      </button>
+                      <span className="w-10 text-center font-medium">{item.quantity}</span>
+                      <button
+                        onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                        disabled={updating === item.productId || item.quantity >= item.product.stockQuantity}
+                        className="w-9 h-9 flex items-center justify-center hover:bg-ink/5 disabled:opacity-50"
+                        aria-label="Increase"
+                      >
+                        <Plus size={14} />
+                      </button>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-display text-lg">{formatINR(Number(item.product.price) * item.quantity)}</div>
+                      <div className="text-xs text-ash">{formatINR(Number(item.product.price))} each</div>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => removeItem(item.productId)}
+                  disabled={updating === item.productId}
+                  aria-label="Remove"
+                  className="self-start text-ash hover:text-rose transition p-2"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </article>
+            ))}
+          </div>
+
+          {/* Summary */}
+          <aside className="lg:sticky lg:top-36 h-fit">
+            <div className="card space-y-4">
+              <div className="eyebrow">Order summary</div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-ash">Subtotal ({totalItems})</span>
+                  <span className="font-medium">{formatINR(subtotal)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-ash">Delivery</span>
+                  <span className={shipping === 0 ? 'text-moss font-medium' : 'font-medium'}>
+                    {shipping === 0 ? 'Free' : formatINR(shipping)}
+                  </span>
+                </div>
+                {shipping > 0 && (
+                  <div className="text-xs text-ash">
+                    Add {formatINR(1999 - subtotal)} more for free delivery
+                  </div>
                 )}
               </div>
-
-              {/* Details */}
-              <div className="flex-1 min-w-0">
-                <h3
-                  className="text-lg font-semibold text-slate-100 truncate cursor-pointer hover:text-cyan-400 transition"
-                  onClick={() => navigate(`/product/${item.productId}`)}
-                >
-                  {item.product.name}
-                </h3>
-                <p className="text-slate-500 text-sm">{item.product.category}</p>
-                <p className="text-lg font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent mt-1">
-                  ₹{item.product.price.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                </p>
+              <div className="rule" />
+              <div className="flex justify-between items-baseline">
+                <span className="font-medium text-ink">Total</span>
+                <span className="font-display text-2xl">{formatINR(total)}</span>
               </div>
-
-              {/* Quantity Controls */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                  disabled={updating === item.productId}
-                  className="w-8 h-8 rounded-lg bg-slate-700 border border-slate-600 text-slate-300 hover:bg-slate-600 transition flex items-center justify-center text-sm font-bold disabled:opacity-50"
-                >
-                  −
-                </button>
-                <span className="w-10 text-center font-bold text-slate-100">{item.quantity}</span>
-                <button
-                  onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                  disabled={updating === item.productId || item.quantity >= item.product.stockQuantity}
-                  className="w-8 h-8 rounded-lg bg-slate-700 border border-slate-600 text-slate-300 hover:bg-slate-600 transition flex items-center justify-center text-sm font-bold disabled:opacity-50"
-                >
-                  +
-                </button>
-              </div>
-
-              {/* Item Total */}
-              <div className="text-right flex-shrink-0 w-24">
-                <p className="text-lg font-bold text-slate-100">
-                  ₹{(item.product.price * item.quantity).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                </p>
-              </div>
-
-              {/* Remove */}
-              <button
-                onClick={() => removeItem(item.productId)}
-                disabled={updating === item.productId}
-                className="text-slate-500 hover:text-red-400 transition p-2 disabled:opacity-50"
-                title="Remove"
-              >
-                ✕
+              <button onClick={handleCheckout} className="btn-primary w-full h-12">
+                Checkout <ArrowRight size={16} />
+              </button>
+              <button onClick={() => navigate('/shop')} className="btn-ghost w-full">
+                Keep shopping
               </button>
             </div>
-          ))}
 
-          {/* Order Summary */}
-          <div className="rounded-xl border border-cyan-500/30 bg-gradient-to-br from-slate-800/50 to-slate-900/50 p-6 space-y-4">
-            <h3 className="text-lg font-bold text-slate-100">Order Summary</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between text-slate-400">
-                <span>Subtotal ({totalItems} items)</span>
-                <span>₹{totalPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
-              </div>
-              <div className="flex justify-between text-slate-400">
-                <span>Delivery</span>
-                <span className="text-emerald-400">Free</span>
-              </div>
-              <div className="border-t border-slate-700 pt-2 flex justify-between">
-                <span className="text-lg font-bold text-slate-100">Total</span>
-                <span className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                  ₹{totalPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                </span>
-              </div>
+            <div className="mt-4 text-xs text-ash text-center">
+              Secure payment · Free returns within 7 days
             </div>
-
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <button
-                onClick={() => navigate('/shop')}
-                className="flex-1 px-6 py-3 bg-slate-800 border border-slate-700 text-slate-300 rounded-xl font-semibold hover:bg-slate-700 transition"
-              >
-                Continue Shopping
-              </button>
-              <button
-                onClick={handleCheckout}
-                className="flex-1 px-6 py-4 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold text-lg rounded-xl hover:from-emerald-600 hover:to-green-700 transition shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2"
-              >
-                ✓ Proceed to Checkout
-              </button>
-            </div>
-          </div>
+          </aside>
         </div>
       )}
     </div>

@@ -2,22 +2,140 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-gray-50 antialiased;
+/* =========================================================
+   Serenvi — Editorial Bazaar design system
+   Tokens mirror tailwind.config.js. See BRANDING.md.
+   ========================================================= */
+
+:root {
+  --ivory: #F6F1E8;
+  --paper: #FFFFFF;
+  --stone: #E9E1D3;
+  --sand:  #EFE7D6;
+  --ink:   #0E0D0B;
+  --soot:  #1C1A16;
+  --ash:   #8A8275;
+  --mist:  #BDB3A0;
+  --saffron: #D4542A;
+  --ember:   #B8431C;
+  --ochre:   #C08A2E;
+  --moss:    #3E5240;
+  --rose:    #C24B5B;
+  --rule:  rgba(14, 13, 11, 0.10);
+  --rule-strong: rgba(14, 13, 11, 0.22);
 }
 
-.card {
-  @apply bg-white rounded-lg shadow p-6;
+/* -------- Base -------- */
+@layer base {
+  html { background: var(--ivory); }
+  body {
+    @apply antialiased text-ink;
+    background: var(--ivory);
+    font-family: 'Instrument Sans', 'Helvetica Neue', system-ui, sans-serif;
+    font-feature-settings: 'ss01', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: 'Fraunces', 'Playfair Display', Georgia, serif;
+    font-optical-sizing: auto;
+    font-variation-settings: 'SOFT' 30, 'WONK' 0;
+    letter-spacing: -0.015em;
+  }
+
+  /* ------- Legacy-theme compatibility -------
+     Existing pages were built on slate/cyan neon. Map those classes onto
+     the new ivory/ink palette so un-edited pages still render coherently. */
+  .bg-slate-950, .bg-slate-900, .bg-slate-800 { background-color: var(--paper) !important; }
+  .bg-slate-700 { background-color: var(--sand) !important; }
+  .text-slate-100, .text-slate-200 { color: var(--ink) !important; }
+  .text-slate-300, .text-slate-400, .text-slate-500 { color: var(--ash) !important; }
+  .border-slate-700, .border-slate-800 { border-color: var(--rule) !important; }
+  .bg-gradient-to-br.from-slate-950, .bg-gradient-to-br.from-slate-900,
+  .bg-gradient-to-b.from-slate-900, .bg-gradient-to-r.from-slate-900,
+  .from-slate-800\/50, .to-slate-900\/50 { background-image: none !important; background-color: var(--paper) !important; }
+  .text-cyan-400, .text-cyan-300, .text-cyan-500 { color: var(--saffron) !important; }
+  .border-cyan-500\/20, .border-cyan-500\/30, .border-cyan-400, .border-cyan-400\/80 { border-color: var(--rule-strong) !important; }
+  .shadow-cyan-500\/50, .shadow-cyan-500\/40, .shadow-cyan-500\/30, .shadow-cyan-500\/20, .shadow-cyan-500\/10 { --tw-shadow-color: rgba(212,84,42,0.18) !important; --tw-shadow: var(--tw-shadow-colored) !important; }
+  .bg-gradient-to-r.from-cyan-500.to-blue-600,
+  .bg-gradient-to-r.from-cyan-400.to-blue-400,
+  .bg-gradient-to-r.from-cyan-500.to-blue-500 { background-image: linear-gradient(90deg, var(--ink), var(--saffron)) !important; color: var(--ivory) !important; }
+  .bg-clip-text.text-transparent { background-image: linear-gradient(90deg, var(--ink), var(--saffron)); -webkit-background-clip: text; background-clip: text; color: transparent !important; }
+
+  /* Clerk (SignIn / SignUp / UserButton) brand-lift */
+  .cl-rootBox, .cl-card { font-family: 'Instrument Sans', sans-serif !important; }
+  .cl-card { border-radius: 14px !important; border: 1px solid var(--rule) !important; box-shadow: 0 22px 40px -24px rgba(14,13,11,0.28) !important; background: var(--paper) !important; }
+  .cl-formButtonPrimary { background: var(--ink) !important; border: none !important; border-radius: 10px !important; letter-spacing: 0.02em; }
+  .cl-formButtonPrimary:hover { background: var(--saffron) !important; }
+  .cl-headerTitle, .cl-headerSubtitle { font-family: 'Fraunces', serif !important; }
 }
 
-.btn-primary {
-  @apply px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition;
+/* -------- Components -------- */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-pebble font-medium tracking-tight transition;
+    font-size: 0.95rem;
+  }
+  .btn-primary   { @apply btn bg-ink text-ivory hover:bg-saffron; }
+  .btn-secondary { @apply btn bg-paper text-ink border border-ink/20 hover:border-ink; }
+  .btn-ghost     { @apply btn text-ink/80 hover:text-ink hover:bg-ink/5; }
+  .btn-saffron   { @apply btn bg-saffron text-ivory hover:bg-ember; }
+  .btn-sm        { @apply px-3 py-1.5 text-sm; }
+
+  .input-field {
+    @apply w-full px-4 py-3 bg-paper border border-ink/15 rounded-pebble text-ink placeholder:text-ash;
+    @apply focus:outline-none focus:border-ink transition;
+  }
+
+  .card { @apply bg-paper rounded-pebble p-6 border border-ink/10 shadow-card; }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm border border-ink/15 bg-paper text-ink/80 hover:border-ink hover:text-ink transition;
+  }
+  .chip-active { @apply bg-ink text-ivory border-ink; }
+
+  .eyebrow { @apply uppercase text-eyebrow tracking-eyebrow text-ash font-sans; }
+  .rule    { @apply border-t border-ink/10; }
+
+  .product-card {
+    @apply relative flex flex-col bg-paper border border-ink/10 rounded-pebble overflow-hidden cursor-pointer;
+    @apply transition-all duration-300 hover:border-ink/30 hover:shadow-lift;
+  }
+  .product-media { @apply relative aspect-[4/5] bg-sand overflow-hidden; }
+  .product-media img { @apply w-full h-full object-cover transition-transform duration-700 ease-out; }
+  .product-card:hover .product-media img { transform: scale(1.05); }
+
+  .skeleton {
+    background: linear-gradient(90deg, var(--stone) 25%, var(--sand) 37%, var(--stone) 63%);
+    background-size: 800px 104px;
+    animation: shimmer 1.6s linear infinite;
+  }
 }
 
-.btn-secondary {
-  @apply px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition;
+/* -------- Utilities -------- */
+@layer utilities {
+  .bg-grain {
+    background-image:
+      radial-gradient(rgba(14,13,11,0.035) 1px, transparent 1px),
+      radial-gradient(rgba(14,13,11,0.025) 1px, transparent 1px);
+    background-size: 3px 3px, 7px 7px;
+    background-position: 0 0, 1.5px 1.5px;
+  }
+  .bg-editorial {
+    background:
+      radial-gradient(1200px 500px at 85% -10%, rgba(212,84,42,0.10), transparent 60%),
+      radial-gradient(900px 400px at 10% 110%, rgba(62,82,64,0.08), transparent 55%),
+      var(--ivory);
+  }
+  .text-balance { text-wrap: balance; }
+  .text-pretty  { text-wrap: pretty; }
+  .hairline     { border-width: 0.5px; }
+  .scrollbar-hidden::-webkit-scrollbar { display: none; }
+  .scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; }
+  .marquee-track { width: max-content; animation: marquee 40s linear infinite; }
 }
 
-.input-field {
-  @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500;
-}
+/* Focus ring */
+*:focus-visible { outline: 2px solid var(--saffron); outline-offset: 2px; border-radius: 4px; }
+::selection { background: var(--ink); color: var(--ivory); }

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import api from '../services/api';
+import Logo from '../components/Common/Logo';
 
 const Onboarding: React.FC = () => {
   const { user } = useUser();
@@ -36,7 +37,6 @@ const Onboarding: React.FC = () => {
       if (res.data?.distributorId) {
         localStorage.setItem('distributorId', res.data.distributorId);
       }
-      // Hard reload so useMe refetches and `onboarded=true` is seen
       window.location.href = '/dashboard';
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to save profile');
@@ -46,79 +46,82 @@ const Onboarding: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center py-12 px-4">
-      <div className="w-full max-w-md bg-slate-900/80 border border-cyan-500/20 rounded-2xl p-8 shadow-2xl backdrop-blur">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent mb-2">
-          Welcome to SERENVI
-        </h1>
-        <p className="text-slate-400 mb-6">Complete your profile to continue</p>
+    <div className="min-h-screen bg-editorial bg-grain flex items-center justify-center py-12 px-4">
+      <div className="w-full max-w-md">
+        <div className="text-ink mb-6 flex justify-center">
+          <Logo className="h-12 w-auto" />
+        </div>
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg">
-            {error}
-          </div>
-        )}
+        <div className="card">
+          <div className="eyebrow mb-2">One last step</div>
+          <h1 className="font-display text-3xl text-ink mb-2 text-balance">
+            Let&apos;s set your ledger.
+          </h1>
+          <p className="text-ash mb-6 text-sm">
+            A name, a number, an optional code — and you&apos;re in.
+          </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm text-slate-300 mb-1">Full Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-cyan-400"
-              placeholder="Jane Doe"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm text-slate-300 mb-1">Phone Number</label>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-cyan-400"
-              placeholder="+91 9876543210"
-              required
-            />
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-sm text-slate-300">Referral Code (optional)</label>
-              <button
-                type="button"
-                onClick={() => {
-                  setSkipReferral(!skipReferral);
-                  if (!skipReferral) setReferralCode('');
-                }}
-                className="text-xs text-cyan-400 hover:text-cyan-300"
-              >
-                {skipReferral ? 'I have a code' : 'Skip'}
-              </button>
+          {error && (
+            <div className="mb-4 p-3 bg-rose/10 border border-rose/30 text-rose text-sm rounded-pebble">
+              {error}
             </div>
-            <input
-              type="text"
-              value={referralCode}
-              onChange={(e) => setReferralCode(e.target.value)}
-              disabled={skipReferral}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed"
-              placeholder="Enter referral code from sponsor"
-            />
-            <p className="text-xs text-slate-500 mt-1">
-              One-time only. Cannot be changed after signup.
-            </p>
-          </div>
+          )}
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold py-3 rounded-lg hover:from-cyan-600 hover:to-blue-700 transition disabled:opacity-50"
-          >
-            {submitting ? 'Saving...' : 'Complete Signup'}
-          </button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="eyebrow block mb-2">Full Name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="input-field"
+                placeholder="Jane Doe"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="eyebrow block mb-2">Phone</label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="input-field"
+                placeholder="+91 9876543210"
+                required
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="eyebrow">Referral Code <span className="lowercase font-sans text-ash normal-case">(optional)</span></label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSkipReferral(!skipReferral);
+                    if (!skipReferral) setReferralCode('');
+                  }}
+                  className="text-xs text-ink underline underline-offset-4 decoration-saffron"
+                >
+                  {skipReferral ? 'I have a code' : 'Skip'}
+                </button>
+              </div>
+              <input
+                type="text"
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value)}
+                disabled={skipReferral}
+                className="input-field disabled:opacity-40 disabled:cursor-not-allowed"
+                placeholder="Enter code from your sponsor"
+              />
+              <p className="text-xs text-ash mt-1">One-time only — cannot be changed later.</p>
+            </div>
+
+            <button type="submit" disabled={submitting} className="btn-primary w-full h-12">
+              {submitting ? 'Saving…' : 'Enter the bazaar'}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );

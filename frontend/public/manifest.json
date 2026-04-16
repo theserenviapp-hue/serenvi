@@ -1,0 +1,16 @@
+{
+  "name": "Serenvi — Modern Indian Bazaar",
+  "short_name": "Serenvi",
+  "description": "Curated fashion, lifestyle and home objects — earned and shared through the Serenvi network.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F6F1E8",
+  "theme_color": "#0E0D0B",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/mark.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "/apple-touch-icon.svg", "sizes": "180x180", "type": "image/svg+xml" }
+  ],
+  "categories": ["shopping", "lifestyle", "fashion"]
+}

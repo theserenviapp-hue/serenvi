@@ -1,116 +1,273 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+  Search,
+  ShoppingBag,
+  Menu,
+  X,
+  LayoutDashboard,
+  Users,
+  Wallet,
+  Trophy,
+  History as HistoryIcon,
+  Settings as SettingsIcon,
+  ShieldCheck,
+  Store,
+} from 'lucide-react';
 import { useClerk, useUser, UserButton } from '@clerk/clerk-react';
+import Logo from './Logo';
+import Footer from './Footer';
+import api from '../../services/api';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
+/**
+ * Editorial Bazaar layout.
+ * - Top: announcement ticker + masthead + primary category nav.
+ * - Mobile: drawer with the same structure.
+ * - Atmosphere: subtle grain + radial warmth behind content.
+ * - Includes Footer on every page.
+ */
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [drawer, setDrawer] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+  const [query, setQuery] = useState('');
   const location = useLocation();
+  const navigate = useNavigate();
   const { signOut } = useClerk();
   const { user } = useUser();
-
-  const handleLogout = () => {
-    signOut({ redirectUrl: '/login' });
-  };
-
-  const isActive = (path: string) => {
-    return location.pathname === path ? 'bg-blue-700' : '';
-  };
-
   const isAdmin = (user?.publicMetadata as any)?.role === 'admin';
 
-  const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: '📊' },
-    { path: '/shop', label: 'Shop', icon: '🛍️' },
-    { path: '/cart', label: 'Cart', icon: '🛒' },
-    { path: '/achievements', label: 'Achievements', icon: '🏆' },
-    { path: '/team', label: 'My Team', icon: '👥' },
-    { path: '/wallet', label: 'Wallet', icon: '💰' },
-    { path: '/history', label: 'History', icon: '📜' },
-    { path: '/settings', label: 'Settings', icon: '⚙️' },
-    ...(isAdmin ? [{ path: '/admin', label: 'Admin Panel', icon: '🛡️' }] : []),
+  // Close drawer on route change
+  useEffect(() => { setDrawer(false); }, [location.pathname]);
+
+  // Live cart count (best-effort)
+  useEffect(() => {
+    let alive = true;
+    const tick = () => {
+      api.get('/cart/count')
+        .then(r => { if (alive) setCartCount(r.data.count || 0); })
+        .catch(() => {});
+    };
+    tick();
+    const t = window.setInterval(tick, 20_000);
+    return () => { alive = false; clearInterval(t); };
+  }, []);
+
+  const submitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = query.trim();
+    navigate(q ? `/shop?q=${encodeURIComponent(q)}` : '/shop');
+  };
+
+  const primaryCats: Array<{ label: string; q: string }> = [
+    { label: 'Women',        q: 'g=Women' },
+    { label: 'Men',          q: 'g=Men' },
+    { label: 'Footwear',     q: 'c=Footwear' },
+    { label: 'Home & Living',q: 'c=Home' },
+    { label: 'Beauty',       q: 'c=Beauty' },
+    { label: 'New',          q: 'sort=new' },
+    { label: 'Sale',         q: 'sort=price-asc' },
   ];
 
+  const accountLinks = [
+    { to: '/dashboard',    label: 'Dashboard',    icon: LayoutDashboard },
+    { to: '/shop',         label: 'Shop',         icon: Store },
+    { to: '/cart',         label: 'Cart',         icon: ShoppingBag },
+    { to: '/achievements', label: 'Achievements', icon: Trophy },
+    { to: '/team',         label: 'My Team',      icon: Users },
+    { to: '/wallet',       label: 'Wallet',       icon: Wallet },
+    { to: '/history',      label: 'History',      icon: HistoryIcon },
+    { to: '/settings',     label: 'Settings',     icon: SettingsIcon },
+    ...(isAdmin ? [{ to: '/admin', label: 'Admin', icon: ShieldCheck }] : []),
+  ];
+
+  const isActive = (p: string) => location.pathname === p;
+
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
-      {/* Sidebar */}
-      <div
-        className={`${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } w-64 bg-gradient-to-b from-slate-900 to-slate-950 text-white transition-all duration-300 fixed h-full z-40 md:static md:translate-x-0 flex flex-col border-r border-cyan-500/20`}
-      >
-        <div className="p-6 flex items-center justify-between border-b border-cyan-500/20">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center font-bold text-sm">S</div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">SERENVI</h1>
-          </div>
-          <button
-            className="md:hidden text-cyan-400 hover:text-cyan-300 transition"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X />
-          </button>
+    <div className="min-h-screen flex flex-col bg-editorial bg-grain text-ink">
+      {/* Announcement ticker */}
+      <div className="bg-ink text-ivory text-xs md:text-[13px] overflow-hidden">
+        <div className="marquee-track flex gap-10 py-2 whitespace-nowrap font-sans tracking-wide">
+          {Array.from({ length: 2 }).flatMap((_, c) =>
+            [
+              'Free shipping over ₹1,999',
+              '·',
+              'Earn on every share — 15 levels of commission',
+              '·',
+              'Hand-picked from ateliers across India',
+              '·',
+              'New arrivals every Monday',
+              '·',
+            ].map((t, i) => <span key={`${c}-${i}`}>{t}</span>)
+          )}
         </div>
+      </div>
 
-        <nav className="mt-8 space-y-1 px-4 flex-1">
-          {navItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`block px-4 py-3 rounded-lg transition duration-200 ${
-                isActive(item.path)
-                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/50'
-                  : 'text-slate-300 hover:text-cyan-400 hover:bg-slate-800/50 hover:border-l-2 hover:border-cyan-400'
-              }`}
-              onClick={() => setSidebarOpen(false)}
+      {/* Masthead */}
+      <header className="sticky top-0 z-40 bg-ivory/85 backdrop-blur-md border-b border-ink/10">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <div className="flex items-center gap-4 py-3 md:py-4">
+            {/* Mobile menu toggle */}
+            <button
+              className="md:hidden -ml-1 p-2 text-ink"
+              aria-label="Open menu"
+              onClick={() => setDrawer(true)}
             >
-              <span className="inline-block mr-3">{item.icon}</span>{item.label}
+              <Menu size={22} />
+            </button>
+
+            {/* Wordmark */}
+            <Link to="/dashboard" aria-label="Serenvi home" className="flex items-center gap-2 text-ink">
+              <span className="hidden md:inline-block" style={{ color: 'var(--ink)' }}>
+                <Logo className="h-9 w-auto" />
+              </span>
+              <span className="md:hidden" style={{ color: 'var(--ink)' }}>
+                <Logo variant="mark" className="h-8 w-8" />
+              </span>
             </Link>
-          ))}
-        </nav>
 
-        <div className="p-4 border-t border-cyan-500/20">
-          <button
-            onClick={handleLogout}
-            className="w-full px-4 py-2 bg-gradient-to-r from-red-600 to-red-500 rounded-lg hover:from-red-700 hover:to-red-600 transition font-semibold text-white shadow-lg hover:shadow-red-500/30"
-          >
-            Logout
-          </button>
-        </div>
-      </div>
+            {/* Search */}
+            <form onSubmit={submitSearch} className="flex-1 mx-2 md:mx-6 max-w-2xl">
+              <label className="flex items-center gap-2 px-3 md:px-4 h-11 bg-paper border border-ink/15 rounded-pebble focus-within:border-ink transition">
+                <Search size={18} className="text-ash shrink-0" />
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search for sarees, sneakers, lamps…"
+                  className="flex-1 bg-transparent outline-none text-ink placeholder:text-ash text-sm md:text-base"
+                />
+                <kbd className="hidden md:inline text-[10px] font-mono text-ash border border-ink/15 rounded px-1.5 py-0.5">↵</kbd>
+              </label>
+            </form>
 
-      {/* Main Content */}
-      <div className="flex-1">
-        {/* Top Bar */}
-        <div className="bg-gradient-to-r from-slate-900 to-slate-800 border-b border-cyan-500/20 shadow-xl p-4 flex items-center justify-between sticky top-0 z-30">
-          <button
-            className="md:hidden text-cyan-400 hover:text-cyan-300 transition p-2 hover:bg-slate-800 rounded-lg"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu />
-          </button>
-          <div className="flex items-center gap-2">
-            <div className="w-1 h-6 bg-gradient-to-b from-cyan-400 to-blue-500 rounded"></div>
-            <h2 className="text-xl font-bold text-slate-100">SERENVI MLM Platform</h2>
+            {/* Icon actions */}
+            <div className="flex items-center gap-1 md:gap-2">
+              <Link
+                to="/cart"
+                className="relative p-2.5 rounded-full hover:bg-ink/5 transition text-ink"
+                aria-label={`Cart (${cartCount})`}
+              >
+                <ShoppingBag size={20} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 text-[10px] font-semibold bg-saffron text-ivory rounded-full flex items-center justify-center">
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </span>
+                )}
+              </Link>
+              <div className="pl-1 border-l border-ink/10 h-8 hidden md:block" />
+              <div className="hidden md:block">
+                <UserButton afterSignOutUrl="/login" />
+              </div>
+            </div>
           </div>
-          <UserButton afterSignOutUrl="/login" />
+
+          {/* Primary categories — hidden on mobile (drawer) */}
+          <nav className="hidden md:flex items-center justify-center gap-1 overflow-x-auto scrollbar-hidden -mt-1 pb-3">
+            {primaryCats.map((c, i) => (
+              <Link
+                key={c.label}
+                to={`/shop?${c.q}`}
+                className={`relative px-3 py-1.5 text-[0.93rem] font-medium tracking-tight whitespace-nowrap text-ink/75 hover:text-ink transition ${
+                  i === primaryCats.length - 1 ? 'text-saffron hover:text-ember' : ''
+                }`}
+              >
+                {c.label}
+                {i === primaryCats.length - 1 && (
+                  <span className="absolute -top-0.5 right-0 w-1.5 h-1.5 bg-saffron rounded-full" />
+                )}
+              </Link>
+            ))}
+            <span className="mx-2 h-4 w-px bg-ink/15" />
+            {accountLinks.slice(0, 5).map((l) => (
+              <Link
+                key={l.to}
+                to={l.to}
+                className={`px-3 py-1.5 text-[0.93rem] font-medium tracking-tight whitespace-nowrap transition ${
+                  isActive(l.to) ? 'text-ink underline underline-offset-8 decoration-saffron decoration-2' : 'text-ink/60 hover:text-ink'
+                }`}
+              >
+                {l.label}
+              </Link>
+            ))}
+          </nav>
         </div>
+      </header>
 
-        {/* Content */}
-        <div className="p-6 min-h-[calc(100vh-80px)]">{children}</div>
-      </div>
+      {/* Mobile drawer */}
+      {drawer && (
+        <>
+          <div
+            className="fixed inset-0 bg-ink/40 z-40 md:hidden"
+            onClick={() => setDrawer(false)}
+            aria-hidden
+          />
+          <aside
+            className="fixed top-0 left-0 bottom-0 w-[82%] max-w-sm bg-ivory z-50 md:hidden flex flex-col animate-fade-up border-r border-ink/10"
+            role="dialog"
+            aria-modal
+          >
+            <div className="flex items-center justify-between p-4 border-b border-ink/10">
+              <div className="text-ink"><Logo className="h-8 w-auto" /></div>
+              <button onClick={() => setDrawer(false)} className="p-2" aria-label="Close menu">
+                <X size={20} />
+              </button>
+            </div>
 
-      {/* Mobile Overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/70 md:hidden z-30"
-          onClick={() => setSidebarOpen(false)}
-        />
+            <div className="px-4 py-3 border-b border-ink/10">
+              <div className="eyebrow mb-3">Shop by</div>
+              <div className="grid grid-cols-2 gap-2">
+                {primaryCats.map((c) => (
+                  <Link
+                    key={c.label}
+                    to={`/shop?${c.q}`}
+                    className="px-3 py-2 rounded-pebble border border-ink/15 bg-paper text-ink font-medium"
+                  >
+                    {c.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            <nav className="px-2 py-3 flex-1 overflow-auto">
+              <div className="eyebrow px-3 mb-2">Account</div>
+              {accountLinks.map(({ to, label, icon: Icon }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  className={`flex items-center gap-3 px-3 py-3 rounded-pebble transition ${
+                    isActive(to) ? 'bg-ink text-ivory' : 'text-ink hover:bg-ink/5'
+                  }`}
+                >
+                  <Icon size={18} />
+                  <span className="font-medium">{label}</span>
+                </Link>
+              ))}
+            </nav>
+
+            <div className="p-4 border-t border-ink/10">
+              <button
+                onClick={() => signOut({ redirectUrl: '/login' })}
+                className="btn-secondary w-full"
+              >
+                Log out
+              </button>
+            </div>
+          </aside>
+        </>
       )}
+
+      {/* Main */}
+      <main className="flex-1">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-10">
+          {children}
+        </div>
+      </main>
+
+      <Footer />
     </div>
   );
 };
