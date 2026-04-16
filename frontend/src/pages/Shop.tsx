@@ -27,21 +27,18 @@ const Shop: React.FC = () => {
     : products.filter(p => p.category === activeCategory);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [prodRes, cartRes] = await Promise.all([
-          api.get('/products'),
-          api.get('/cart/count'),
-        ]);
-        setProducts(prodRes.data.products || []);
-        setCartCount(cartRes.data.count || 0);
-      } catch (error) {
-        console.error('Failed to fetch data', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+    // Load products and cart count independently — product list should
+    // render even if cart call fails (e.g. transient auth issue).
+    api
+      .get('/products')
+      .then((res) => setProducts(res.data.products || res.data || []))
+      .catch((e) => console.error('Products fetch failed', e))
+      .finally(() => setLoading(false));
+
+    api
+      .get('/cart/count')
+      .then((res) => setCartCount(res.data.count || 0))
+      .catch((e) => console.warn('Cart count fetch failed', e));
   }, []);
 
   const addToCart = async (e: React.MouseEvent, productId: string) => {
