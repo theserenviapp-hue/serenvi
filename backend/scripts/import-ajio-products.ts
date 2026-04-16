@@ -17,7 +17,8 @@ const prisma = new PrismaClient();
 
 interface CsvRow {
   'Product Name': string;
-  Prices: string;
+  Prices?: string;
+  'New Prices'?: string;
   Category: string;
   Type: string;
   'Image URL(s)': string;
@@ -49,11 +50,16 @@ function mapGender(raw: string): string {
 }
 
 async function main() {
-  const csvPath = path.join(__dirname, '..', 'data', 'ajio_products.csv');
+  // Allow passing CSV file via CLI arg, default to ajio_products.csv
+  const fileName = process.argv[2] || 'ajio_products.csv';
+  const csvPath = path.isAbsolute(fileName)
+    ? fileName
+    : path.join(__dirname, '..', 'data', fileName);
   if (!fs.existsSync(csvPath)) {
     console.error(`CSV not found: ${csvPath}`);
     process.exit(1);
   }
+  console.log(`📂 Reading: ${csvPath}`);
 
   const raw = fs.readFileSync(csvPath, 'utf8');
   const rows: CsvRow[] = parse(raw, {
@@ -77,7 +83,7 @@ async function main() {
       continue;
     }
 
-    const price = parsePrice(row.Prices);
+    const price = parsePrice(row.Prices || row['New Prices'] || '');
     if (price <= 0) {
       console.warn(`⚠️  Skipping "${name}" — invalid price`);
       skipped++;
