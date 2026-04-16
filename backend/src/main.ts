@@ -78,10 +78,10 @@ async function bootstrap() {
     maxAge: 3600,
   });
 
-  const port = process.env.PORT || 3001;
-  await app.listen(port);
+  const port = parseInt(process.env.PORT || '3001', 10);
+  await app.listen(port, '0.0.0.0');
 
-  console.log(`\n🚀 SERENVI Backend is running on http://localhost:${port}`);
+  console.log(`\n🚀 SERENVI Backend is running on port ${port}`);
   console.log(`🔒 Security features enabled: Helmet, Rate Limiting, Input Sanitization`);
 }
 
