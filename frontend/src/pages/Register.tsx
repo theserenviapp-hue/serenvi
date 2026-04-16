@@ -13,7 +13,7 @@ const Register: React.FC = () => {
           routing="path"
           path="/register"
           signInUrl="/login"
-          forceRedirectUrl="/dashboard"
+          forceRedirectUrl="/onboarding"
         />
       </div>
     </div>

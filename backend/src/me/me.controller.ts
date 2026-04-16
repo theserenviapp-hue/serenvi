@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Req } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards, Req } from '@nestjs/common';
 import { ClerkGuard } from '../common/clerk.guard';
 import { MeService } from './me.service';
 
@@ -9,7 +9,14 @@ export class MeController {
 
   @Get()
   async getMe(@Req() req: any) {
-    // ClerkGuard has already auto-provisioned and attached req.user
     return this.meService.getCurrentUser(req.user.userId);
+  }
+
+  @Post('onboarding')
+  async completeOnboarding(
+    @Req() req: any,
+    @Body() body: { name?: string; phone: string; referralCode?: string },
+  ) {
+    return this.meService.completeOnboarding(req.user.userId, body);
   }
 }

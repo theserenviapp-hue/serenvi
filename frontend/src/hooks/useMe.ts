@@ -14,6 +14,7 @@ export interface Me {
   totalSales?: number;
   monthlySales?: number;
   sponsorId?: string | null;
+  onboarded?: boolean;
   isAdmin: boolean;
 }
 
