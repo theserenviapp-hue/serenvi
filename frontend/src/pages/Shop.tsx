@@ -30,7 +30,7 @@ const Shop: React.FC = () => {
     // Load products and cart count independently — product list should
     // render even if cart call fails (e.g. transient auth issue).
     api
-      .get('/products')
+      .get('/products?take=2000')
       .then((res) => setProducts(res.data.products || res.data || []))
       .catch((e) => console.error('Products fetch failed', e))
       .finally(() => setLoading(false));

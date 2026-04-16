@@ -170,7 +170,7 @@ export class ProductService {
     };
   }
 
-  async getProducts(category?: string, skip: number = 0, take: number = 100) {
+  async getProducts(category?: string, skip: number = 0, take: number = 1000) {
     const products = await this.prisma.product.findMany({
       where: {
         isActive: true,
