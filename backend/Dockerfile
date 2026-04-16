@@ -8,8 +8,8 @@ RUN apk add --no-cache openssl
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies (--ignore-scripts: @clerk/shared postinstall fails in CI)
+RUN npm ci --ignore-scripts
 
 # Copy source code
 COPY . .
@@ -21,7 +21,7 @@ RUN npx prisma generate
 RUN npm run build
 
 # Remove dev dependencies
-RUN npm prune --production
+RUN npm prune --production --ignore-scripts
 
 # Expose port
 EXPOSE 3001
