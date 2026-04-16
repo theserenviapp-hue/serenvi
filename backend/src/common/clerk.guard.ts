@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
   Logger,
 } from '@nestjs/common';
-import { verifyToken } from '@clerk/backend';
+import { verifyToken, createClerkClient } from '@clerk/backend';
 import { PrismaService } from '../database/prisma.service';
 
 /**
@@ -21,8 +21,18 @@ import { PrismaService } from '../database/prisma.service';
 @Injectable()
 export class ClerkGuard implements CanActivate {
   private readonly logger = new Logger(ClerkGuard.name);
+  private clerkClient: ReturnType<typeof createClerkClient> | null = null;
 
   constructor(private readonly prisma: PrismaService) {}
+
+  private getClerkClient() {
+    if (!this.clerkClient) {
+      this.clerkClient = createClerkClient({
+        secretKey: process.env.CLERK_SECRET_KEY!,
+      });
+    }
+    return this.clerkClient;
+  }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
@@ -72,9 +82,21 @@ export class ClerkGuard implements CanActivate {
     });
 
     if (!user) {
-      // Auto-provision on first seen Clerk user
-      const email = clerkEmail || `${clerkUserId}@clerk.local`;
-      const placeholderName = email.split('@')[0] || 'User';
+      // JWT rarely has email; fetch from Clerk API to get real email
+      let resolvedEmail = clerkEmail;
+      let resolvedName: string | undefined;
+      try {
+        const clerkUser = await this.getClerkClient().users.getUser(clerkUserId);
+        const primaryId = clerkUser.primaryEmailAddressId;
+        const primary = clerkUser.emailAddresses.find((e: any) => e.id === primaryId);
+        resolvedEmail = resolvedEmail || primary?.emailAddress || clerkUser.emailAddresses[0]?.emailAddress;
+        resolvedName = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || undefined;
+      } catch (e: any) {
+        this.logger.warn(`Clerk users.getUser failed: ${e?.message}`);
+      }
+
+      const email = resolvedEmail || `${clerkUserId}@clerk.local`;
+      const placeholderName = resolvedName || email.split('@')[0] || 'User';
 
       user = await this.prisma.$transaction(async (tx) => {
         // Guard against email collision (existing user from legacy /auth/register flow)
