@@ -81,13 +81,56 @@ export class MeService {
       sponsorId = sponsor.id;
     }
 
-    const updated = await this.prisma.distributor.update({
-      where: { id: user.distributor.id },
-      data: {
-        phone: cleanedPhone,
-        ...(name && name.trim() ? { name: name.trim() } : {}),
-        ...(sponsorId ? { sponsorId } : {}),
-      },
+    // Are we attaching a sponsor for the first time? If so, we must also
+    // populate MLMTreeNode. The ClerkGuard auto-provisions a bare
+    // Distributor on first authenticated request (no sponsor, no tree
+    // rows), so onboarding owns the responsibility of writing the tree.
+    const attachingSponsor = !!sponsorId && !user.distributor.sponsorId;
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const d = await tx.distributor.update({
+        where: { id: user.distributor!.id },
+        data: {
+          phone: cleanedPhone,
+          ...(name && name.trim() ? { name: name.trim() } : {}),
+          ...(sponsorId ? { sponsorId } : {}),
+        },
+      });
+
+      if (attachingSponsor) {
+        // Safety: if stale tree rows somehow exist for this descendant,
+        // wipe them before rebuilding. Normal case finds zero rows.
+        await tx.mLMTreeNode.deleteMany({ where: { descendantId: d.id } });
+
+        // Depth 1 = direct sponsor
+        const ancestors: Array<{ ancestorId: string; depth: number }> = [
+          { ancestorId: sponsorId!, depth: 1 },
+        ];
+
+        // Inherit all of sponsor's ancestors at +1 depth, capped at 15.
+        const sponsorAncestors = await tx.mLMTreeNode.findMany({
+          where: { descendantId: sponsorId! },
+          select: { ancestorId: true, depth: true },
+        });
+        for (const a of sponsorAncestors) {
+          const nextDepth = a.depth + 1;
+          if (nextDepth > 15) continue;
+          ancestors.push({ ancestorId: a.ancestorId, depth: nextDepth });
+        }
+
+        if (ancestors.length) {
+          await tx.mLMTreeNode.createMany({
+            data: ancestors.map((a) => ({
+              ancestorId: a.ancestorId,
+              descendantId: d.id,
+              depth: a.depth,
+            })),
+            skipDuplicates: true,
+          });
+        }
+      }
+
+      return d;
     });
 
     return {
