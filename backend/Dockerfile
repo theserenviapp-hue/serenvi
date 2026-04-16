@@ -2,14 +2,16 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Install OpenSSL for Prisma compatibility
-RUN apk add --no-cache openssl
+# Install build tools for native modules (bcrypt) + OpenSSL for Prisma
+RUN apk add --no-cache openssl python3 make g++ libc6-compat
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies (--ignore-scripts: @clerk/shared postinstall fails in CI)
+# Install dependencies (--ignore-scripts: @clerk/shared postinstall fails)
 RUN npm ci --ignore-scripts
+# Rebuild bcrypt native binary (was skipped by --ignore-scripts)
+RUN npm rebuild bcrypt
 
 # Copy source code
 COPY . .
