@@ -17,6 +17,7 @@ import History from './pages/History';
 import Settings from './pages/Settings';
 import UserProfile from './pages/UserProfile';
 import Admin from './pages/Admin';
+import Welcome from './pages/Welcome';
 import { setTokenGetter } from './services/api';
 import { useMe } from './hooks/useMe';
 
@@ -86,7 +87,9 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/login/*" element={<Login />} />
           <Route path="/register/*" element={<Register />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="/welcome" element={<Welcome />} />
+          <Route path="/" element={<Welcome />} />
+          <Route path="*" element={<Navigate to="/welcome" replace />} />
         </Routes>
       </SignedOut>
     </Router>
