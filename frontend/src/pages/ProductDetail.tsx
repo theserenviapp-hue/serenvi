@@ -19,6 +19,39 @@ interface Product {
 const splitCsv = (s?: string) => (s ? s.split(',').map((x) => x.trim()).filter(Boolean) : []);
 const formatINR = (n: number) => `₹${Math.round(n).toLocaleString('en-IN')}`;
 
+/**
+ * The DB `sizes` column was polluted by the original CSV import which wrote
+ * the "Size/Color Variants" field straight through — so many rows contain
+ * colour strings like "offwhite", "bluebeige" instead of real sizes.
+ *
+ * normalizeSizes() accepts the raw DB value and returns a clean size list:
+ *  - if every token looks like a real clothing/shoe size → use as-is
+ *  - otherwise fall back to a sensible default based on category & gender
+ */
+const CLOTHING_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'FREE'];
+const isClothingSize = (s: string) => CLOTHING_SIZES.includes(s.toUpperCase());
+const isNumericSize  = (s: string) => /^\d{1,2}(\.\d)?$/.test(s.trim()); // 6, 7, 8.5, 38
+
+function normalizeSizes(raw: string | undefined, category: string | undefined, gender: string | undefined): string[] {
+  const tokens = splitCsv(raw);
+  const looksLikeSize = tokens.length > 0 && tokens.every((t) => isClothingSize(t) || isNumericSize(t));
+  if (looksLikeSize) return tokens.map((t) => t.toUpperCase());
+
+  const cat = (category || '').toLowerCase();
+  if (/foot|shoe|sandal|sneaker|heel|loafer|boot/.test(cat)) {
+    // Indian men/women shoe size range
+    return /men|male/i.test(gender || '')
+      ? ['7', '8', '9', '10', '11']
+      : ['4', '5', '6', '7', '8'];
+  }
+  if (/home|living|kitchen|decor|lamp|bag|wallet|accessor|jewel|watch|beauty|cosmet/.test(cat)) {
+    return []; // no size concept
+  }
+  return /men|male/i.test(gender || '')
+    ? ['S', 'M', 'L', 'XL', 'XXL']
+    : ['S', 'M', 'L', 'XL'];
+}
+
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -39,7 +72,10 @@ const ProductDetail: React.FC = () => {
   }, [id, navigate]);
 
   const images = useMemo(() => splitCsv(product?.imageUrl), [product]);
-  const sizes  = useMemo(() => splitCsv(product?.sizes),    [product]);
+  const sizes  = useMemo(
+    () => normalizeSizes(product?.sizes, product?.category, product?.gender),
+    [product],
+  );
   const inStock = (product?.stockQuantity ?? 0) > 0;
 
   const addOrBuy = async (redirect = false) => {

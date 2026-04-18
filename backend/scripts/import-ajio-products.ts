@@ -49,6 +49,20 @@ function mapGender(raw: string): string {
   return 'Unisex';
 }
 
+/** The CSV column "Size/Color Variants" actually contains colour strings
+ *  ("offwhite", "bluebeige") — not sizes. Map to a sensible size set based
+ *  on category + gender so the shop UI can render a proper size picker. */
+function defaultSizes(category: string, gender: string): string | null {
+  const cat = (category || '').toLowerCase();
+  if (/foot|shoe|sandal|sneaker|heel|loafer|boot/.test(cat)) {
+    return /^m/i.test(gender) ? '7, 8, 9, 10, 11' : '4, 5, 6, 7, 8';
+  }
+  if (/home|living|kitchen|decor|lamp|bag|wallet|accessor|jewel|watch|beauty|cosmet/.test(cat)) {
+    return null;
+  }
+  return /^m/i.test(gender) ? 'S, M, L, XL, XXL' : 'S, M, L, XL';
+}
+
 async function main() {
   // Allow passing CSV file via CLI arg, default to ajio_products.csv
   const fileName = process.argv[2] || 'ajio_products.csv';
@@ -103,6 +117,7 @@ async function main() {
         ? `${row.Category} - ${row.Type}`.trim()
         : row.Category || 'General';
 
+      const gender = mapGender(row.Gender);
       await prisma.product.create({
         data: {
           name,
@@ -112,8 +127,10 @@ async function main() {
           type: 'PHYSICAL',
           imageUrl: row['Image URL(s)'] || null,
           stockQuantity: parseInteger(row['Stock Quantity']),
-          gender: mapGender(row.Gender),
-          sizes: row['Size/Color Variants'] || null,
+          gender,
+          // NOTE: CSV "Size/Color Variants" holds colours, not sizes. Use
+          // category+gender defaults instead.
+          sizes: defaultSizes(combinedCategory, gender),
           isActive: true,
         },
       });
