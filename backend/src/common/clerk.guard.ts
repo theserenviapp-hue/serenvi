@@ -25,6 +25,28 @@ export class ClerkGuard implements CanActivate {
 
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Short, human-shareable 6-char referral code (A–Z + 0–9, no look-alikes). */
+  private generateReferralCode(): string {
+    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let out = '';
+    for (let i = 0; i < 6; i++) {
+      out += alphabet[Math.floor(Math.random() * alphabet.length)];
+    }
+    return out;
+  }
+
+  private async uniqueReferralCode(
+    tx: { distributor: { findUnique: (args: any) => Promise<any> } },
+  ): Promise<string> {
+    for (let i = 0; i < 10; i++) {
+      const code = this.generateReferralCode();
+      const clash = await tx.distributor.findUnique({ where: { referralCode: code } });
+      if (!clash) return code;
+    }
+    // Fallback — append 2 more chars to avoid collision in the extreme case.
+    return this.generateReferralCode() + this.generateReferralCode().slice(0, 2);
+  }
+
   private getClerkClient() {
     if (!this.clerkClient) {
       this.clerkClient = createClerkClient({
@@ -111,6 +133,7 @@ export class ClerkGuard implements CanActivate {
           return linked;
         }
 
+        const referralCode = await this.uniqueReferralCode(tx);
         const created = await tx.user.create({
           data: {
             email,
@@ -121,6 +144,7 @@ export class ClerkGuard implements CanActivate {
                 name: placeholderName,
                 phone: '',
                 email,
+                referralCode,
               },
             },
           },
