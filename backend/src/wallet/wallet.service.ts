@@ -615,7 +615,7 @@ export class WalletService {
 
     const [deposits, withdrawals, transfers] = await Promise.all([
       this.prisma.deposit.aggregate({
-        where: { distributorId },
+        where: { distributorId, status: 'COMPLETED' },
         _sum: { amount: true },
       }),
       this.prisma.withdrawalRequest.aggregate({
