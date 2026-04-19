@@ -11,9 +11,6 @@ interface CartItem {
 
 const PAYMENT_METHODS = [
   { id: 'WALLET', label: 'Wallet Balance', icon: '💰', desc: 'Pay from your SERENVI wallet' },
-  { id: 'UPI', label: 'UPI', icon: '📱', desc: 'Google Pay, PhonePe, Paytm, etc.' },
-  { id: 'BANK_TRANSFER', label: 'Bank Transfer', icon: '🏦', desc: 'Direct bank transfer / NEFT / IMPS' },
-  { id: 'CARD', label: 'Credit / Debit Card', icon: '💳', desc: 'Visa, Mastercard, RuPay' },
 ];
 
 const Checkout: React.FC = () => {
