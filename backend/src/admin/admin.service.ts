@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
+import { Decimal } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class AdminService {
@@ -125,6 +126,99 @@ export class AdminService {
         date: o.createdAt,
       })),
     };
+  }
+
+  /**
+   * List deposits (optionally filtered by status)
+   */
+  async getDeposits(status?: string) {
+    const where: any = {};
+    if (status) where.status = status.toUpperCase();
+
+    const deposits = await this.prisma.deposit.findMany({
+      where,
+      include: {
+        distributor: {
+          select: { id: true, name: true, email: true, phone: true, referralCode: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+    });
+
+    return deposits.map((d) => ({
+      id: d.id,
+      distributorId: d.distributorId,
+      distributor: d.distributor,
+      amount: d.amount.toNumber(),
+      paymentMethod: d.paymentMethod,
+      transactionId: d.transactionId,
+      status: d.status,
+      createdAt: d.createdAt,
+    }));
+  }
+
+  /**
+   * Approve a pending deposit: credit wallet + mark COMPLETED atomically
+   */
+  async approveDeposit(depositId: string) {
+    const deposit = await this.prisma.deposit.findUnique({
+      where: { id: depositId },
+    });
+    if (!deposit) throw new NotFoundException('Deposit not found');
+    if (deposit.status !== 'PENDING') {
+      throw new BadRequestException(`Deposit is ${deposit.status}, not PENDING`);
+    }
+
+    const amount = new Decimal(deposit.amount);
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const updatedDeposit = await tx.deposit.update({
+        where: { id: depositId },
+        data: { status: 'COMPLETED' },
+      });
+
+      await tx.distributor.update({
+        where: { id: deposit.distributorId },
+        data: { walletBalance: { increment: amount } },
+      });
+
+      await tx.walletTransaction.create({
+        data: {
+          distributorId: deposit.distributorId,
+          type: 'DEPOSIT',
+          amount,
+          description: `Wallet topup via ${deposit.paymentMethod} (approved)`,
+          referenceId: deposit.id,
+        },
+      });
+
+      return updatedDeposit;
+    });
+
+    this.logger.log(`[ADMIN] Approved deposit ${depositId} for ${deposit.distributorId} +₹${amount}`);
+    return { ...updated, amount: updated.amount.toNumber() };
+  }
+
+  /**
+   * Reject a pending deposit
+   */
+  async rejectDeposit(depositId: string, reason?: string) {
+    const deposit = await this.prisma.deposit.findUnique({
+      where: { id: depositId },
+    });
+    if (!deposit) throw new NotFoundException('Deposit not found');
+    if (deposit.status !== 'PENDING') {
+      throw new BadRequestException(`Deposit is ${deposit.status}, not PENDING`);
+    }
+
+    const updated = await this.prisma.deposit.update({
+      where: { id: depositId },
+      data: { status: 'REJECTED' },
+    });
+
+    this.logger.log(`[ADMIN] Rejected deposit ${depositId} (${reason || 'no reason'})`);
+    return { ...updated, amount: updated.amount.toNumber() };
   }
 
   /**

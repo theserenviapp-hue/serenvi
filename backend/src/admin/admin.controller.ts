@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Param, Query, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Param, Query, Body, UseGuards } from '@nestjs/common';
 import { ClerkGuard } from '../common/clerk.guard';
 import { AdminGuard } from '../common/admin.guard';
 import { AdminService } from './admin.service';
@@ -7,6 +7,24 @@ import { AdminService } from './admin.service';
 @UseGuards(ClerkGuard, AdminGuard)
 export class AdminController {
   constructor(private adminService: AdminService) {}
+
+  @Get('deposits')
+  async getDeposits(@Query('status') status?: string) {
+    return this.adminService.getDeposits(status);
+  }
+
+  @Post('deposits/:id/approve')
+  async approveDeposit(@Param('id') id: string) {
+    return this.adminService.approveDeposit(id);
+  }
+
+  @Post('deposits/:id/reject')
+  async rejectDeposit(
+    @Param('id') id: string,
+    @Body('reason') reason?: string,
+  ) {
+    return this.adminService.rejectDeposit(id, reason);
+  }
 
   @Get('stats')
   async getDashboardStats() {
