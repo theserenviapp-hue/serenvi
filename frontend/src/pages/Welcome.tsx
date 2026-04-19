@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingBag, Users, Wallet, Truck, ShieldCheck, Instagram, Twitter, Youtube, Mail, Phone } from 'lucide-react';
+import { ShoppingBag, Users, Wallet, ShieldCheck, Instagram, Twitter, Youtube, Mail, Phone } from 'lucide-react';
 import axios from 'axios';
 import Logo from '../components/Common/Logo';
 

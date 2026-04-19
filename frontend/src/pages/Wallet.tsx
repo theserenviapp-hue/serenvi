@@ -17,7 +17,9 @@ const Wallet: React.FC = () => {
   
   // Deposit state
   const [depositAmount, setDepositAmount] = useState('');
-  const [depositMethod, setDepositMethod] = useState('UPI');
+  const [depositMethod, setDepositMethod] = useState<'UPI_QR' | 'BANK_TRANSFER'>('UPI_QR');
+  const [depositStep, setDepositStep] = useState<1 | 2>(1);
+  const [depositUTR, setDepositUTR] = useState('');
   const [depositLoading, setDepositLoading] = useState(false);
 
   // Transfer state
@@ -44,20 +46,35 @@ const Wallet: React.FC = () => {
     fetchWalletDetails();
   }, []);
 
-  const handleDeposit = async () => {
-    if (!depositAmount) return;
+  const goToPaymentStep = () => {
+    const amt = parseFloat(depositAmount);
+    if (!amt || amt < 100) {
+      alert('Minimum deposit is ₹100');
+      return;
+    }
+    setDepositStep(2);
+  };
+
+  const submitDepositUTR = async () => {
+    if (!depositUTR.trim() || depositUTR.trim().length < 6) {
+      alert('Please enter a valid UTR / transaction reference');
+      return;
+    }
     setDepositLoading(true);
     try {
       await api.post('/wallet/deposit', {
         amount: parseFloat(depositAmount),
         paymentMethod: depositMethod,
+        transactionId: depositUTR.trim(),
       });
-      alert('✅ Deposit successful!');
+      alert('✅ Submitted. Your amount will be credited in 1–2 hours after verification.');
       setDepositAmount('');
+      setDepositUTR('');
+      setDepositStep(1);
       setActiveTab('overview');
       window.location.reload();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Deposit failed');
+      alert(err.response?.data?.message || 'Deposit submission failed');
     } finally {
       setDepositLoading(false);
     }
@@ -183,42 +200,176 @@ const Wallet: React.FC = () => {
       {activeTab === 'deposit' && (
         <div className="rounded-xl border border-cyan-500/30 bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm p-8">
           <h2 className="text-2xl font-bold text-slate-100 mb-6">💳 Add Funds to Wallet</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-slate-300 mb-2 font-medium">Payment Method</label>
-              <select
-                className="w-full bg-slate-900/50 border border-cyan-500/30 rounded-lg px-4 py-2 text-slate-200 focus:border-cyan-400 focus:outline-none transition"
-                value={depositMethod}
-                onChange={(e) => setDepositMethod(e.target.value)}
+
+          {depositStep === 1 && (
+            <div className="space-y-5">
+              <div>
+                <label className="block text-slate-300 mb-2 font-medium">Payment Method</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setDepositMethod('UPI_QR')}
+                    className={`p-4 rounded-lg border-2 text-left transition ${
+                      depositMethod === 'UPI_QR'
+                        ? 'border-cyan-400 bg-cyan-500/10'
+                        : 'border-slate-700 bg-slate-900/30 hover:border-slate-500'
+                    }`}
+                  >
+                    <div className="text-2xl mb-1">📱</div>
+                    <div className="font-semibold text-slate-100">UPI QR</div>
+                    <div className="text-xs text-slate-400">Scan & pay via any UPI app</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDepositMethod('BANK_TRANSFER')}
+                    className={`p-4 rounded-lg border-2 text-left transition ${
+                      depositMethod === 'BANK_TRANSFER'
+                        ? 'border-cyan-400 bg-cyan-500/10'
+                        : 'border-slate-700 bg-slate-900/30 hover:border-slate-500'
+                    }`}
+                  >
+                    <div className="text-2xl mb-1">🏦</div>
+                    <div className="font-semibold text-slate-100">Bank Transfer</div>
+                    <div className="text-xs text-slate-400">NEFT / IMPS to bank account</div>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-300 mb-2 font-medium">Amount (₹)</label>
+                <input
+                  type="number"
+                  placeholder="Enter amount (min ₹100)"
+                  className="w-full bg-slate-900/50 border border-cyan-500/30 rounded-lg px-4 py-2 text-slate-200 focus:border-cyan-400 focus:outline-none transition placeholder-slate-500"
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(e.target.value)}
+                  min="100"
+                />
+              </div>
+
+              <button
+                onClick={goToPaymentStep}
+                className="w-full px-4 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-lg hover:from-cyan-600 hover:to-blue-700 transition shadow-lg shadow-cyan-500/20 disabled:opacity-50"
+                disabled={!depositAmount}
               >
-                <option>UPI</option>
-                <option>CARD</option>
-                <option>BANK_TRANSFER</option>
-                <option>WALLET</option>
-              </select>
+                Continue →
+              </button>
             </div>
+          )}
 
-            <div>
-              <label className="block text-slate-300 mb-2 font-medium">Amount (₹)</label>
-              <input
-                type="number"
-                placeholder="Enter amount"
-                className="w-full bg-slate-900/50 border border-cyan-500/30 rounded-lg px-4 py-2 text-slate-200 focus:border-cyan-400 focus:outline-none transition placeholder-slate-500"
-                value={depositAmount}
-                onChange={(e) => setDepositAmount(e.target.value)}
-                min="100"
-              />
+          {depositStep === 2 && depositMethod === 'UPI_QR' && (
+            <div className="space-y-5">
+              <div className="bg-slate-900/50 border border-cyan-500/20 rounded-lg p-6 text-center">
+                <p className="text-slate-400 text-sm mb-3">Pay ₹{depositAmount} using any UPI app</p>
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(
+                    `upi://pay?pa=8116969019@ibl&pn=ARYAMAN%20MANDAL&cu=INR&am=${depositAmount}`
+                  )}`}
+                  alt="UPI QR"
+                  className="mx-auto rounded-lg bg-white p-3"
+                />
+                <p className="text-slate-300 mt-4 text-sm">UPI ID</p>
+                <p className="text-cyan-400 font-mono text-lg font-bold select-all">8116969019@ibl</p>
+                <p className="text-slate-400 text-xs mt-1">Payee: ARYAMAN MANDAL</p>
+              </div>
+
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 text-yellow-200 text-sm">
+                After paying, enter the UTR / Transaction Reference number you received
+                from your UPI app below, then click Submit. Your wallet will be credited
+                within <strong>1–2 hours</strong> after verification.
+              </div>
+
+              <div>
+                <label className="block text-slate-300 mb-2 font-medium">UTR / Transaction Reference</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 425812345678"
+                  className="w-full bg-slate-900/50 border border-cyan-500/30 rounded-lg px-4 py-2 text-slate-200 focus:border-cyan-400 focus:outline-none transition placeholder-slate-500 font-mono"
+                  value={depositUTR}
+                  onChange={(e) => setDepositUTR(e.target.value.trim())}
+                  maxLength={40}
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDepositStep(1)}
+                  className="px-4 py-3 border border-slate-600 text-slate-300 rounded-lg hover:bg-slate-800 transition"
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={submitDepositUTR}
+                  disabled={depositLoading || !depositUTR.trim()}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-lg hover:from-cyan-600 hover:to-blue-700 transition shadow-lg shadow-cyan-500/20 disabled:opacity-50"
+                >
+                  {depositLoading ? '⏳ Submitting...' : 'Submit UTR'}
+                </button>
+              </div>
             </div>
+          )}
 
-            <button
-              onClick={handleDeposit}
-              className="w-full px-4 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-lg hover:from-cyan-600 hover:to-blue-700 transition shadow-lg shadow-cyan-500/20 disabled:opacity-50"
-              disabled={depositLoading || !depositAmount}
-            >
-              {depositLoading ? '⏳ Processing...' : '✓ Deposit Now'}
-            </button>
-          </div>
+          {depositStep === 2 && depositMethod === 'BANK_TRANSFER' && (
+            <div className="space-y-5">
+              <div className="bg-slate-900/50 border border-cyan-500/20 rounded-lg p-6">
+                <p className="text-slate-400 text-sm mb-4">
+                  Transfer ₹{depositAmount} to the following bank account via NEFT / IMPS / RTGS:
+                </p>
+                <div className="space-y-3 text-slate-200 text-sm">
+                  <div className="flex justify-between border-b border-slate-700 pb-2">
+                    <span className="text-slate-400">Account Holder</span>
+                    <span className="font-semibold">ARYAMAN MANDAL</span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-700 pb-2">
+                    <span className="text-slate-400">Account Number</span>
+                    <span className="font-mono font-semibold select-all">20512612107</span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-700 pb-2">
+                    <span className="text-slate-400">Bank</span>
+                    <span className="font-semibold">State Bank of India (SBI)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">IFSC Code</span>
+                    <span className="font-mono font-semibold select-all">SBIN0001055</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 text-yellow-200 text-sm">
+                After transferring, enter the UTR / Transaction Reference number from your
+                bank below, then click Submit. Your wallet will be credited within
+                <strong> 1–2 hours</strong> after verification.
+              </div>
+
+              <div>
+                <label className="block text-slate-300 mb-2 font-medium">UTR / Transaction Reference</label>
+                <input
+                  type="text"
+                  placeholder="e.g. SBIN125134567890"
+                  className="w-full bg-slate-900/50 border border-cyan-500/30 rounded-lg px-4 py-2 text-slate-200 focus:border-cyan-400 focus:outline-none transition placeholder-slate-500 font-mono"
+                  value={depositUTR}
+                  onChange={(e) => setDepositUTR(e.target.value.trim())}
+                  maxLength={40}
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDepositStep(1)}
+                  className="px-4 py-3 border border-slate-600 text-slate-300 rounded-lg hover:bg-slate-800 transition"
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={submitDepositUTR}
+                  disabled={depositLoading || !depositUTR.trim()}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-lg hover:from-cyan-600 hover:to-blue-700 transition shadow-lg shadow-cyan-500/20 disabled:opacity-50"
+                >
+                  {depositLoading ? '⏳ Submitting...' : 'Submit UTR'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

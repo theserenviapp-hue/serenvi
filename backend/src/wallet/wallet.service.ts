@@ -372,11 +372,24 @@ export class WalletService {
   async deposit(
     distributorId: string,
     amount: number,
-    paymentMethod: string = 'UPI',
+    paymentMethod: string = 'UPI_QR',
     transactionId?: string,
   ) {
     if (amount <= 0) {
       throw new BadRequestException('Amount must be greater than 0');
+    }
+    if (amount < 100) {
+      throw new BadRequestException('Minimum deposit is ₹100');
+    }
+
+    const ALLOWED = ['UPI_QR', 'BANK_TRANSFER'];
+    if (!ALLOWED.includes(paymentMethod)) {
+      throw new BadRequestException('Invalid payment method');
+    }
+
+    const utr = (transactionId || '').trim();
+    if (!utr || utr.length < 6 || utr.length > 40) {
+      throw new BadRequestException('UTR / transaction reference required (6-40 chars)');
     }
 
     const distributor = await this.prisma.distributor.findUnique({
@@ -389,39 +402,21 @@ export class WalletService {
 
     const amountDecimal = new Decimal(amount);
 
-    // Create deposit record
+    // Deposit stays PENDING. Admin manually verifies UTR, then approves
+    // to credit wallet. No auto-credit — user gets "1–2 hrs" message.
     const deposit = await this.prisma.deposit.create({
       data: {
         distributorId,
         amount: amountDecimal,
         paymentMethod,
-        transactionId,
-        status: 'COMPLETED',
+        transactionId: utr,
+        status: 'PENDING',
       },
     });
 
-    // Update wallet balance
-    await this.prisma.distributor.update({
-      where: { id: distributorId },
-      data: {
-        walletBalance: {
-          increment: amountDecimal,
-        },
-      },
-    });
-
-    // Log transaction
-    await this.prisma.walletTransaction.create({
-      data: {
-        distributorId,
-        type: 'DEPOSIT',
-        amount: amountDecimal,
-        description: `Wallet topup via ${paymentMethod}`,
-        referenceId: deposit.id,
-      },
-    });
-
-    this.logger.log(`Deposit of ₹${amount} created for distributor ${distributorId}`);
+    this.logger.log(
+      `Deposit request of ₹${amount} via ${paymentMethod} (UTR ${utr}) submitted for ${distributorId} — PENDING admin verification`,
+    );
 
     return {
       ...deposit,
