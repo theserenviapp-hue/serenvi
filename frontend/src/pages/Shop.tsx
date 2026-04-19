@@ -28,12 +28,21 @@ type SortKey = 'relevance' | 'price-asc' | 'price-desc' | 'new';
 const PAGE_SIZE = 24;
 
 /** Curated taxonomy — mapped to `category` / `gender` fields in the DB.
- *  Each chip resolves to a filter function + optional URL param. */
+ *  Each chip resolves to a filter function + optional URL param.
+ *
+ *  Gender match gotcha: the string "Male" is a substring of "Female" and
+ *  "Men" is a substring of "Women". So /men|male/i test "Women" == true
+ *  and the Men chip bleeds into Women (and vice-versa). Import pipeline
+ *  normalizes gender to exactly "Male" | "Female" | "Kids" | "Unisex",
+ *  so match on exact equality against the normalized value. */
+const isFemale = (g: string) => g === 'Female';
+const isMale   = (g: string) => g === 'Male';
+
 const curatedChips: Array<{ label: string; match: (p: Product) => boolean; param?: string }> = [
   { label: 'All',           match: () => true },
-  { label: 'Women',         match: (p) => /women|female/i.test(p.gender || ''), param: 'g=Women' },
-  { label: 'Men',           match: (p) => /men|male/i.test(p.gender || ''),     param: 'g=Men' },
-  { label: 'Dresses',       match: (p) => /dress/i.test(p.category) },
+  { label: 'Women',         match: (p) => isFemale((p.gender || '').trim()), param: 'g=Women' },
+  { label: 'Men',           match: (p) => isMale((p.gender || '').trim()),   param: 'g=Men' },
+  { label: 'Dresses',       match: (p) => /dress/i.test(p.category)     && isFemale((p.gender || '').trim()) },
   { label: 'Tops & Tees',   match: (p) => /top|tshirt|t-shirt|tee|shirt|camisole/i.test(p.category) },
   { label: 'Bottoms',       match: (p) => /pant|trouser|jean|jegging|skirt|short/i.test(p.category) },
   { label: 'Outerwear',     match: (p) => /jacket|coat|hoodie|sweatshirt|sweater|cardigan/i.test(p.category) },
