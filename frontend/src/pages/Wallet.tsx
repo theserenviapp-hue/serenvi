@@ -147,19 +147,19 @@ const Wallet: React.FC = () => {
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
             <div className="bg-slate-900/50 border border-cyan-500/20 p-4 rounded-lg">
-              <p className="text-slate-400 text-sm">Deposited</p>
+              <p className="text-white text-sm font-medium">Deposited</p>
               <p className="text-xl font-bold text-cyan-400">₹{(walletData?.totalDeposited || 0).toLocaleString('en-IN', {maximumFractionDigits: 0})}</p>
             </div>
             <div className="bg-slate-900/50 border border-emerald-500/20 p-4 rounded-lg">
-              <p className="text-slate-400 text-sm">Withdrawn</p>
+              <p className="text-white text-sm font-medium">Withdrawn</p>
               <p className="text-xl font-bold text-emerald-400">₹{(walletData?.totalWithdrawn || 0).toLocaleString('en-IN', {maximumFractionDigits: 0})}</p>
             </div>
             <div className="bg-slate-900/50 border border-blue-500/20 p-4 rounded-lg">
-              <p className="text-slate-400 text-sm">Transferred</p>
+              <p className="text-white text-sm font-medium">Transferred</p>
               <p className="text-xl font-bold text-blue-400">₹{(walletData?.totalTransferred || 0).toLocaleString('en-IN', {maximumFractionDigits: 0})}</p>
             </div>
             <div className="bg-slate-900/50 border border-purple-500/20 p-4 rounded-lg">
-              <p className="text-slate-400 text-sm">Referral Code</p>
+              <p className="text-white text-sm font-medium">Referral Code</p>
               <p className="text-xl font-bold text-purple-400 font-mono">{walletData?.referralCode || '------'}</p>
             </div>
           </div>
@@ -491,7 +491,7 @@ const Wallet: React.FC = () => {
                 <div key={idx} className="flex justify-between items-center pb-3 border-b border-slate-700/50">
                   <div>
                     <p className="font-semibold text-slate-200">{tx.type}</p>
-                    <p className="text-slate-400 text-sm">{new Date(tx.createdAt).toLocaleDateString()}</p>
+                    <p className="text-white text-sm font-medium">{new Date(tx.createdAt).toLocaleDateString()}</p>
                   </div>
                   <p className={`font-bold text-lg ${tx.amount > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                     {tx.amount > 0 ? '+' : '-'}₹{Math.abs(tx.amount).toLocaleString('en-IN', {maximumFractionDigits: 2})}
