@@ -111,10 +111,18 @@ export class SalesService {
     // 5. Trigger commission distribution (to upline)
     await this.commissionService.distributeCommission(sale.id, sellerId, saleAmount);
 
-    // 6. Check and award achievements
-    // Achievement check should be on the SPONSOR whose level1Sales was incremented
-    if (seller.sponsorId) {
-      await this.achievementService.checkAndClaimAchievements(seller.sponsorId);
+    // 6. Check and award achievements for seller + all upline
+    try {
+      await this.achievementService.checkAndClaimAchievements(sellerId);
+      const upline = await this.prisma.mLMTreeNode.findMany({
+        where: { descendantId: sellerId, depth: { lte: 15 } },
+        select: { ancestorId: true },
+      });
+      for (const node of upline) {
+        await this.achievementService.checkAndClaimAchievements(node.ancestorId);
+      }
+    } catch (achieveErr) {
+      this.logger.error('Achievement check failed:', achieveErr);
     }
 
     this.logger.log(
@@ -349,8 +357,21 @@ export class SalesService {
     // Note: Leadership salary is now distributed automatically on the 1st of each month
     // based on monthly sales tiers, not in real-time
 
-    // 5. Check and award achievements
-    await this.achievementService.checkAndClaimAchievements(buyerId);
+    // 5. Check and award achievements for buyer + their upline
+    try {
+      await this.achievementService.checkAndClaimAchievements(buyerId);
+
+      // Also check achievements for upline (their totalSales just updated)
+      const upline = await this.prisma.mLMTreeNode.findMany({
+        where: { descendantId: buyerId, depth: { lte: 15 } },
+        select: { ancestorId: true },
+      });
+      for (const node of upline) {
+        await this.achievementService.checkAndClaimAchievements(node.ancestorId);
+      }
+    } catch (achieveErr) {
+      this.logger.error('[PURCHASE] Achievement check failed:', achieveErr);
+    }
 
     this.logger.log(
       `[PURCHASE] ✓ Product purchase: ${quantity}x ${product.name} by ${buyer.name} for ₹${purchaseAmount} via ${paymentMethod}`,

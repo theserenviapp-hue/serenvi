@@ -94,6 +94,30 @@ export class CommissionService {
         }
       }
 
+      // ── Update upline sales metrics ──
+      // Every ancestor in the tree gets their totalSales and monthlySales
+      // incremented by the sale amount so dashboard/achievements reflect
+      // downline activity.
+      for (let level = 1; level <= 15; level++) {
+        const uplineId = uplineChain[level];
+        if (!uplineId) continue;
+
+        const updateData: any = {
+          totalSales: { increment: saleAmount },
+          monthlySales: { increment: saleAmount },
+        };
+        // Level 1 = direct sponsor → also increment level1Sales
+        if (level === 1) {
+          updateData.level1Sales = { increment: saleAmount };
+        }
+
+        await this.prisma.distributor.update({
+          where: { id: uplineId },
+          data: updateData,
+        });
+        this.logger.log(`[SALES_METRIC] Level ${level}: Updated totalSales/monthlySales for ${uplineId} +₹${saleAmount}`);
+      }
+
       this.logger.log(
         `[COMMISSION] ✓ Distribution COMPLETED for sale ${saleId}. Total distributed: ₹${saleAmount
           .mul(55)
