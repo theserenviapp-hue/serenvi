@@ -38,7 +38,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const { signOut } = useClerk();
   const { user } = useUser();
-  const isAdmin = (user?.publicMetadata as any)?.role === 'admin';
+  const [isAdmin, setIsAdmin] = useState<boolean>(
+    (user?.publicMetadata as any)?.role === 'admin'
+  );
+
+  // Authoritative check from backend /me; Clerk metadata is only a hint.
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .get('/me')
+      .then((res) => {
+        if (!cancelled && res.data?.isAdmin) setIsAdmin(true);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   // Close drawer on route change
   useEffect(() => { setDrawer(false); }, [location.pathname]);
