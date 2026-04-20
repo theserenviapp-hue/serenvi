@@ -169,7 +169,7 @@ const Welcome: React.FC = () => {
               <article key={p.id} className="product-card">
                 <div className="product-media">
                   {p.imageUrl ? (
-                    <img src={firstImage(p.imageUrl)} alt={p.name} loading="lazy" />
+                    <img src={firstImage(p.imageUrl)} alt={p.name} loading="lazy" referrerPolicy="no-referrer" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-ash italic font-display">no image</div>
                   )}

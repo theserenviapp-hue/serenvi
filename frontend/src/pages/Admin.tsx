@@ -671,7 +671,7 @@ const Admin: React.FC = () => {
                         <tr key={p.id} className="border-b border-slate-800 text-slate-300 hover:bg-slate-800/50">
                           <td className="py-3 px-2">
                             {p.imageUrl ? (
-                              <img src={p.imageUrl.split(',')[0].trim()} alt={p.name} className="w-12 h-12 object-cover rounded-lg" />
+                              <img src={p.imageUrl.split(',')[0].trim()} alt={p.name} className="w-12 h-12 object-cover rounded-lg" referrerPolicy="no-referrer" />
                             ) : (
                               <div className="w-12 h-12 bg-slate-700 rounded-lg flex items-center justify-center text-slate-500 text-xl">📦</div>
                             )}

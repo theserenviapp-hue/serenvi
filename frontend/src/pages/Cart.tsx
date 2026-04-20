@@ -141,6 +141,7 @@ const Cart: React.FC = () => {
                       src={item.product.imageUrl.split(',')[0].trim()}
                       alt={item.product.name}
                       className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-ash font-display italic">—</div>

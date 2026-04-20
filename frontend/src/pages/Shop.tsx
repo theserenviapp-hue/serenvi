@@ -199,6 +199,7 @@ const Shop: React.FC = () => {
                     alt=""
                     className="w-full h-full object-cover"
                     loading="lazy"
+                    referrerPolicy="no-referrer"
                   />
                 </div>
               ))}
@@ -352,7 +353,7 @@ const Shop: React.FC = () => {
               >
                 <div className="product-media">
                   {p.imageUrl ? (
-                    <img src={firstImage(p.imageUrl)} alt={p.name} loading="lazy" />
+                    <img src={firstImage(p.imageUrl)} alt={p.name} loading="lazy" referrerPolicy="no-referrer" />
                   ) : (
                     <div className="flex items-center justify-center w-full h-full text-ash font-display italic">
                       no image

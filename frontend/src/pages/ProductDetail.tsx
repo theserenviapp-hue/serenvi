@@ -148,7 +148,7 @@ const ProductDetail: React.FC = () => {
                   }`}
                   aria-label={`View ${i + 1}`}
                 >
-                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <img src={img} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 </button>
               ))}
             </div>
@@ -156,7 +156,7 @@ const ProductDetail: React.FC = () => {
           <div className={`col-span-12 ${images.length > 1 ? 'lg:col-span-10' : ''} order-1 lg:order-2`}>
             <div className="relative aspect-[4/5] rounded-pebble overflow-hidden bg-sand">
               {images[activeImage] ? (
-                <img src={images[activeImage]} alt={product.name} className="w-full h-full object-cover" />
+                <img src={images[activeImage]} alt={product.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               ) : (
                 <div className="flex items-center justify-center w-full h-full font-display italic text-ash">
                   no image
