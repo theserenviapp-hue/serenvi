@@ -50,23 +50,56 @@
      light gray-* theme (Achievements era). Both get re-mapped onto the
      warm beige + brown palette here. Update both sides if you rename. */
 
-  /* slate (dark-theme pages) */
-  .bg-slate-950, .bg-slate-900, .bg-slate-800 { background-color: var(--paper) !important; }
-  .bg-slate-700 { background-color: var(--sand) !important; }
-  .text-slate-100, .text-slate-200 { color: var(--ink) !important; }
-  .text-slate-300, .text-slate-400, .text-slate-500 { color: var(--ash) !important; }
-  .border-slate-700, .border-slate-800 { border-color: var(--rule) !important; }
-  .bg-gradient-to-br.from-slate-950, .bg-gradient-to-br.from-slate-900,
-  .bg-gradient-to-b.from-slate-900, .bg-gradient-to-r.from-slate-900,
-  .from-slate-800\/50, .to-slate-900\/50 { background-image: none !important; background-color: var(--paper) !important; }
+  /* Blanket override: ANY slate-* / gray-* / zinc-* / neutral-* /
+     stone-tailwind class gets remapped to brown/beige. Uses attribute
+     [class*=] selectors to catch every opacity variant
+     (bg-slate-800/50, bg-slate-700/80, etc) without enumerating each.
+     Specificity = 0,1,0 — defeated by anything more specific, but
+     `!important` carries the day against vanilla utilities. */
 
-  /* gray (Achievements / older light-theme pages) */
-  .bg-gray-50, .bg-gray-100 { background-color: var(--paper) !important; }
-  .bg-gray-200, .bg-gray-300 { background-color: var(--sand) !important; }
-  .bg-gray-400, .bg-gray-500, .bg-gray-600, .bg-gray-700, .bg-gray-800, .bg-gray-900 { background-color: var(--paper) !important; }
+  /* dark surfaces (was slate-700/800/900/950 + opacity) -> cream paper */
+  [class*="bg-slate-9"],
+  [class*="bg-slate-8"],
+  [class*="bg-slate-7"],
+  [class*="bg-slate-6"],
+  [class*="bg-slate-5"],
+  [class*="bg-gray-9"],
+  [class*="bg-gray-8"],
+  [class*="bg-gray-7"],
+  [class*="bg-gray-6"],
+  [class*="bg-gray-5"],
+  [class*="bg-gray-4"],
+  [class*="bg-zinc-"],
+  [class*="bg-neutral-"] { background-color: var(--paper) !important; background-image: none !important; }
+
+  /* lighter greys -> sand */
+  [class*="bg-gray-3"],
+  [class*="bg-gray-2"],
+  [class*="bg-gray-1"],
+  [class*="bg-gray-50"] { background-color: var(--sand) !important; }
+
+  /* text greys */
+  [class*="text-slate-1"],
+  [class*="text-slate-2"],
+  [class*="text-slate-3"]:not([class*="text-slate-300"]),
+  .text-slate-100, .text-slate-200,
   .text-gray-900, .text-gray-800, .text-gray-700 { color: var(--ink) !important; }
+  .text-slate-300, .text-slate-400, .text-slate-500, .text-slate-600,
   .text-gray-600, .text-gray-500, .text-gray-400 { color: var(--ash) !important; }
-  .border-gray-100, .border-gray-200, .border-gray-300, .border-gray-400 { border-color: var(--rule) !important; }
+
+  /* borders */
+  [class*="border-slate-"],
+  [class*="border-gray-"] { border-color: var(--rule) !important; }
+
+  /* slate gradient stops (any opacity) */
+  [class*="from-slate-"],
+  [class*="to-slate-"],
+  [class*="via-slate-"] { --tw-gradient-from: var(--paper) !important; --tw-gradient-to: var(--paper) !important; --tw-gradient-via: var(--paper) !important; }
+  .bg-gradient-to-br[class*="from-slate-"],
+  .bg-gradient-to-b[class*="from-slate-"],
+  .bg-gradient-to-r[class*="from-slate-"],
+  .bg-gradient-to-l[class*="from-slate-"],
+  .bg-gradient-to-t[class*="from-slate-"] { background-image: none !important; background-color: var(--paper) !important; }
 
   /* cyan / blue / purple / yellow / green accents from old palette */
   .text-cyan-400, .text-cyan-300, .text-cyan-500,
