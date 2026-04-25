@@ -8,21 +8,22 @@
    ========================================================= */
 
 :root {
-  --ivory: #F6F1E8;
-  --paper: #FFFFFF;
-  --stone: #E9E1D3;
-  --sand:  #EFE7D6;
-  --ink:   #0E0D0B;
-  --soot:  #1C1A16;
-  --ash:   #8A8275;
-  --mist:  #BDB3A0;
-  --saffron: #D4542A;
-  --ember:   #B8431C;
-  --ochre:   #C08A2E;
+  /* Warm beige + brown palette. See BRANDING.md. */
+  --ivory: #EDE2CB; /* page bg */
+  --paper: #F8F0DD; /* cards / inputs */
+  --stone: #DCCEAF; /* chips, dividers */
+  --sand:  #E2D4B5; /* image placeholders */
+  --ink:   #3B2A18; /* primary text / dark surfaces (warm brown, not black) */
+  --soot:  #241608;
+  --ash:   #7A5E3E;
+  --mist:  #A48A65;
+  --saffron: #C9491F;
+  --ember:   #A23913;
+  --ochre:   #B0801E;
   --moss:    #3E5240;
-  --rose:    #C24B5B;
-  --rule:  rgba(14, 13, 11, 0.10);
-  --rule-strong: rgba(14, 13, 11, 0.22);
+  --rose:    #B43E50;
+  --rule:  rgba(59, 42, 24, 0.14);
+  --rule-strong: rgba(59, 42, 24, 0.28);
 }
 
 /* -------- Base -------- */
@@ -45,8 +46,11 @@
   }
 
   /* ------- Legacy-theme compatibility -------
-     Existing pages were built on slate/cyan neon. Map those classes onto
-     the new ivory/ink palette so un-edited pages still render coherently. */
+     Existing pages were built on slate/cyan neon (Dashboard era) and a
+     light gray-* theme (Achievements era). Both get re-mapped onto the
+     warm beige + brown palette here. Update both sides if you rename. */
+
+  /* slate (dark-theme pages) */
   .bg-slate-950, .bg-slate-900, .bg-slate-800 { background-color: var(--paper) !important; }
   .bg-slate-700 { background-color: var(--sand) !important; }
   .text-slate-100, .text-slate-200 { color: var(--ink) !important; }
@@ -55,13 +59,44 @@
   .bg-gradient-to-br.from-slate-950, .bg-gradient-to-br.from-slate-900,
   .bg-gradient-to-b.from-slate-900, .bg-gradient-to-r.from-slate-900,
   .from-slate-800\/50, .to-slate-900\/50 { background-image: none !important; background-color: var(--paper) !important; }
-  .text-cyan-400, .text-cyan-300, .text-cyan-500 { color: var(--saffron) !important; }
-  .border-cyan-500\/20, .border-cyan-500\/30, .border-cyan-400, .border-cyan-400\/80 { border-color: var(--rule-strong) !important; }
-  .shadow-cyan-500\/50, .shadow-cyan-500\/40, .shadow-cyan-500\/30, .shadow-cyan-500\/20, .shadow-cyan-500\/10 { --tw-shadow-color: rgba(212,84,42,0.18) !important; --tw-shadow: var(--tw-shadow-colored) !important; }
+
+  /* gray (Achievements / older light-theme pages) */
+  .bg-gray-50, .bg-gray-100 { background-color: var(--paper) !important; }
+  .bg-gray-200, .bg-gray-300 { background-color: var(--sand) !important; }
+  .bg-gray-400, .bg-gray-500, .bg-gray-600, .bg-gray-700, .bg-gray-800, .bg-gray-900 { background-color: var(--paper) !important; }
+  .text-gray-900, .text-gray-800, .text-gray-700 { color: var(--ink) !important; }
+  .text-gray-600, .text-gray-500, .text-gray-400 { color: var(--ash) !important; }
+  .border-gray-100, .border-gray-200, .border-gray-300, .border-gray-400 { border-color: var(--rule) !important; }
+
+  /* cyan / blue / purple / yellow / green accents from old palette */
+  .text-cyan-400, .text-cyan-300, .text-cyan-500,
+  .text-blue-400, .text-blue-500, .text-blue-600,
+  .text-purple-400, .text-purple-500, .text-yellow-400, .text-yellow-500, .text-yellow-600 { color: var(--saffron) !important; }
+  .text-green-400, .text-green-500, .text-green-600, .text-emerald-400, .text-emerald-500, .text-emerald-600 { color: var(--moss) !important; }
+  .text-red-400, .text-red-500, .text-red-600 { color: var(--rose) !important; }
+
+  .border-cyan-500\/20, .border-cyan-500\/30, .border-cyan-400, .border-cyan-400\/80,
+  .border-blue-500, .border-yellow-500, .border-green-500 { border-color: var(--rule-strong) !important; }
+  .shadow-cyan-500\/50, .shadow-cyan-500\/40, .shadow-cyan-500\/30, .shadow-cyan-500\/20, .shadow-cyan-500\/10 { --tw-shadow-color: rgba(201,73,31,0.18) !important; --tw-shadow: var(--tw-shadow-colored) !important; }
+
+  /* gradient pills used on rank-progress cards, claim buttons, etc. */
   .bg-gradient-to-r.from-cyan-500.to-blue-600,
   .bg-gradient-to-r.from-cyan-400.to-blue-400,
-  .bg-gradient-to-r.from-cyan-500.to-blue-500 { background-image: linear-gradient(90deg, var(--ink), var(--saffron)) !important; color: var(--ivory) !important; }
+  .bg-gradient-to-r.from-cyan-500.to-blue-500,
+  .bg-gradient-to-r.from-yellow-500.to-orange-500,
+  .bg-gradient-to-r.from-yellow-500.to-orange-600,
+  .bg-gradient-to-r.from-green-500.to-emerald-600,
+  .bg-gradient-to-r.from-emerald-500.to-green-600 { background-image: linear-gradient(90deg, var(--ink), var(--saffron)) !important; color: var(--ivory) !important; }
   .bg-clip-text.text-transparent { background-image: linear-gradient(90deg, var(--ink), var(--saffron)); -webkit-background-clip: text; background-clip: text; color: transparent !important; }
+
+  /* tinted bg/border combos: yellow-50, green-50, red-50 etc. */
+  .bg-yellow-50, .bg-yellow-500\/10 { background-color: rgba(176,128,30,0.10) !important; }
+  .bg-green-50, .bg-green-500\/10, .bg-emerald-500\/10 { background-color: rgba(62,82,64,0.10) !important; }
+  .bg-red-50, .bg-red-500\/10 { background-color: rgba(180,62,80,0.10) !important; }
+  .bg-blue-50, .bg-blue-500\/10 { background-color: rgba(201,73,31,0.08) !important; }
+  .border-yellow-500\/30, .border-yellow-500 { border-color: rgba(176,128,30,0.30) !important; }
+  .border-green-500\/30 { border-color: rgba(62,82,64,0.30) !important; }
+  .border-red-500\/30 { border-color: rgba(180,62,80,0.30) !important; }
 
   /* Clerk (SignIn / SignUp / UserButton) brand-lift */
   .cl-rootBox, .cl-card { font-family: 'Instrument Sans', sans-serif !important; }
@@ -117,15 +152,15 @@
 @layer utilities {
   .bg-grain {
     background-image:
-      radial-gradient(rgba(14,13,11,0.035) 1px, transparent 1px),
-      radial-gradient(rgba(14,13,11,0.025) 1px, transparent 1px);
+      radial-gradient(rgba(59,42,24,0.05) 1px, transparent 1px),
+      radial-gradient(rgba(59,42,24,0.035) 1px, transparent 1px);
     background-size: 3px 3px, 7px 7px;
     background-position: 0 0, 1.5px 1.5px;
   }
   .bg-editorial {
     background:
-      radial-gradient(1200px 500px at 85% -10%, rgba(212,84,42,0.10), transparent 60%),
-      radial-gradient(900px 400px at 10% 110%, rgba(62,82,64,0.08), transparent 55%),
+      radial-gradient(1200px 500px at 85% -10%, rgba(201,73,31,0.12), transparent 60%),
+      radial-gradient(900px 400px at 10% 110%, rgba(62,82,64,0.10), transparent 55%),
       var(--ivory);
   }
   .text-balance { text-wrap: balance; }

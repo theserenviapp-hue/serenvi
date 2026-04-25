@@ -4,22 +4,22 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Surfaces
-        ivory:   '#F6F1E8',
-        paper:   '#FFFFFF',
-        stone:   '#E9E1D3',
-        sand:    '#EFE7D6',
-        // Text
-        ink:     '#0E0D0B',
-        soot:    '#1C1A16',
-        ash:     '#8A8275',
-        mist:    '#BDB3A0',
+        // Surfaces — warm beige family
+        ivory:   '#EDE2CB', // page bg (was #F6F1E8 too greyish)
+        paper:   '#F8F0DD', // cards
+        stone:   '#DCCEAF', // chips, dividers
+        sand:    '#E2D4B5', // image placeholders
+        // Text — warm brown family (was near-black)
+        ink:     '#3B2A18', // primary text / dark surfaces
+        soot:    '#241608', // deepest brown
+        ash:     '#7A5E3E', // muted brown
+        mist:    '#A48A65', // softer muted
         // Accents
-        saffron: '#D4542A',
-        ember:   '#B8431C',
-        ochre:   '#C08A2E',
+        saffron: '#C9491F', // tuned slightly warmer to sit on beige
+        ember:   '#A23913',
+        ochre:   '#B0801E',
         moss:    '#3E5240',
-        rose:    '#C24B5B',
+        rose:    '#B43E50',
         // Legacy names kept so pre-existing pages don't break
         primary:   '#D4542A',
         secondary: '#3E5240',
@@ -42,9 +42,9 @@ module.exports = {
         'display-xl': ['6.4rem',  { lineHeight: '0.96' }],
       },
       boxShadow: {
-        'card':  '0 1px 0 rgba(14,13,11,0.04), 0 10px 28px -18px rgba(14,13,11,0.18)',
-        'lift':  '0 2px 0 rgba(14,13,11,0.05), 0 22px 40px -24px rgba(14,13,11,0.28)',
-        'inset-rule': 'inset 0 -1px 0 rgba(14,13,11,0.08)',
+        'card':  '0 1px 0 rgba(59,42,24,0.05), 0 10px 28px -18px rgba(59,42,24,0.22)',
+        'lift':  '0 2px 0 rgba(59,42,24,0.06), 0 22px 40px -24px rgba(59,42,24,0.32)',
+        'inset-rule': 'inset 0 -1px 0 rgba(59,42,24,0.10)',
       },
       borderRadius: { 'pebble': '14px' },
       keyframes: {
