@@ -78,6 +78,24 @@
   [class*="bg-gray-1"],
   [class*="bg-gray-50"] { background-color: var(--sand) !important; }
 
+  /* Progress-bar tracks (rounded-full + grey bg) — give them a visible
+     boundary so the empty state reads on the warm beige page. */
+  .rounded-full[class*="bg-gray-"],
+  .rounded-full[class*="bg-slate-"] {
+    background-color: var(--stone) !important;
+    box-shadow: inset 0 0 0 1px var(--rule-strong) !important;
+  }
+
+  /* Solid bg colour utilities used as progress-bar fills / pill chips
+     across legacy pages. Map to brand accents so they actually contrast
+     against the new track. */
+  .bg-blue-500, .bg-blue-600, .bg-blue-700,
+  .bg-cyan-500, .bg-cyan-600,
+  .bg-purple-500, .bg-purple-600 { background-color: var(--saffron) !important; }
+  .bg-green-500, .bg-green-600, .bg-emerald-500, .bg-emerald-600 { background-color: var(--moss) !important; }
+  .bg-yellow-500, .bg-yellow-600, .bg-orange-500, .bg-orange-600 { background-color: var(--ochre) !important; }
+  .bg-red-500, .bg-red-600 { background-color: var(--rose) !important; }
+
   /* text greys */
   [class*="text-slate-1"],
   [class*="text-slate-2"],
