@@ -96,12 +96,16 @@
   .bg-yellow-500, .bg-yellow-600, .bg-orange-500, .bg-orange-600 { background-color: var(--ochre) !important; }
   .bg-red-500, .bg-red-600 { background-color: var(--rose) !important; }
 
-  /* text greys */
+  /* text greys + plain text-white (legacy dark-theme labels are now on
+     cream surfaces — flip them to ink so they read). New brand uses
+     text-ivory on dark surfaces, so this override doesn't hit our own
+     buttons / nav / badges. */
   [class*="text-slate-1"],
   [class*="text-slate-2"],
   [class*="text-slate-3"]:not([class*="text-slate-300"]),
   .text-slate-100, .text-slate-200,
-  .text-gray-900, .text-gray-800, .text-gray-700 { color: var(--ink) !important; }
+  .text-gray-900, .text-gray-800, .text-gray-700,
+  .text-white { color: var(--ink) !important; }
   .text-slate-300, .text-slate-400, .text-slate-500, .text-slate-600,
   .text-gray-600, .text-gray-500, .text-gray-400 { color: var(--ash) !important; }
 
