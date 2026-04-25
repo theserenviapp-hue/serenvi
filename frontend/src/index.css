@@ -229,3 +229,18 @@
 /* Focus ring */
 *:focus-visible { outline: 2px solid var(--saffron); outline-offset: 2px; border-radius: 4px; }
 ::selection { background: var(--ink); color: var(--ivory); }
+
+/* =========================================================
+   Hard-override layer (NOT inside @layer) so it cascades AFTER every
+   Tailwind utility. Without this, .text-white from Tailwind utilities
+   wins over the same selector defined inside @layer base. Keep this
+   block at the end of the file. */
+body .text-white,
+.text-white { color: var(--ink) !important; }
+
+/* In case any inline white slips through */
+[style*="color: white"],
+[style*="color:#fff"],
+[style*="color: #fff"],
+[style*="color:#ffffff"],
+[style*="color: #ffffff"] { color: var(--ink) !important; }
