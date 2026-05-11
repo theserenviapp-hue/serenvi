@@ -16,8 +16,8 @@ RUN npm rebuild bcrypt
 # Copy source code
 COPY . .
 
-# Generate Prisma Client
-RUN npx prisma generate
+# Generate Prisma Client with dummy DATABASE_URL (only needed for schema validation)
+RUN DATABASE_URL="postgresql://user:password@localhost/db" npx prisma generate
 
 # Build the application
 RUN npm run build
