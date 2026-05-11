@@ -16,6 +16,9 @@ RUN npm rebuild bcrypt
 # Copy source code
 COPY . .
 
+# Make startup script executable
+RUN chmod +x scripts/startup.sh
+
 # Generate Prisma Client with dummy DATABASE_URL (only needed for schema validation)
 RUN DATABASE_URL="postgresql://user:password@localhost/db" npx prisma generate
 
@@ -28,5 +31,5 @@ RUN npm prune --production --ignore-scripts
 # Expose port
 EXPOSE 3001
 
-# Start the application using production startup
-CMD ["npm", "run", "start:prod"]
+# Start the application with migration handling
+CMD ["bash", "scripts/startup.sh"]
