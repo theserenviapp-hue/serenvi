@@ -32,4 +32,4 @@ RUN npm prune --production --ignore-scripts
 EXPOSE 3001
 
 # Start the application with migration handling
-CMD ["bash", "scripts/startup.sh"]
+CMD ["sh", "scripts/startup.sh"]
