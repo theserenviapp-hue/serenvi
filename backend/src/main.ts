@@ -71,11 +71,14 @@ async function bootstrap() {
 
   // 5. Enable CORS with strict restrictions
   app.enableCors({
-    origin: (process.env.FRONTEND_URL || 'http://localhost:3000').split(',').map(url => url.trim()),
+    origin: [
+      'https://serenviapp.vercel.app',
+      'https://www.serenviapp.vercel.app',
+      'https://serenviapp-34pg77wme-theserenvicompany-sudos-projects.vercel.app',
+      'https://serenviapp-cm56jarsv-theserenvicompany-sudos-projects.vercel.app',
+      'http://localhost:3000'
+    ],
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    maxAge: 3600,
   });
 
   const port = parseInt(process.env.PORT || '3001', 10);
