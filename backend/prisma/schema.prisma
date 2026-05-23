@@ -18,6 +18,7 @@ model User {
   id                String    @id @default(cuid())
   email             String    @unique
   password          String    // bcrypt hashed
+  clerkUserId       String?   @unique // Clerk identity (set on first Clerk request)
   isAdmin           Boolean   @default(false)
   resetToken        String?
   resetTokenExpiry  DateTime?
