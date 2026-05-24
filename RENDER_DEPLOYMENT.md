@@ -2,32 +2,31 @@
 
 ## Required Environment Variables on Render
 
-All of these must be set in your Render service's **Environment** tab:
+### Core Environment Variables (Required)
 
-### Database Connection (Supabase)
+**DATABASE_URL** (Connection String)
+```
+postgresql://postgres:[PASSWORD]@[HOST]:5432/postgres
+```
 
-**DATABASE_URL** (Transaction Pooler - for app runtime)
+For **Supabase** (pgbouncer connection pooler):
 ```
 postgresql://postgres:[PASSWORD]@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1
 ```
-- **Host**: `aws-1-ap-northeast-1.pooler.supabase.com`
-- **Port**: `6543`
-- **Query params**: `?pgbouncer=true&connection_limit=1`
-- **IMPORTANT**: URL-encode special characters in password:
-  - `#` → `%23`
-  - `$` → `%24`
-  - `&` → `%26`
-  - `@` → `%40`
-  - `:` → `%3A`
 
-**DIRECT_URL** (Session Pooler - for migrations)
+For **Railway** (direct PostgreSQL):
+- Railway provides `DATABASE_URL` automatically in the environment
+
+### Optional Environment Variables
+
+**DIRECT_URL** (Only needed for Supabase with pgbouncer)
+- If using Supabase on Render, set this to use the session pooler for migrations:
 ```
 postgresql://postgres:[PASSWORD]@aws-1-ap-northeast-1.pooler.supabase.com:5432/postgres
 ```
-- **Host**: `aws-1-ap-northeast-1.pooler.supabase.com`
-- **Port**: `5432` (not 6543)
-- **No pgbouncer params**
-- **IMPORTANT**: Same URL-encoding rules apply to password
+- Railway users: **Do NOT set this** — migrations will use `DATABASE_URL` automatically
+- **IMPORTANT**: URL-encode special characters in password:
+  - `#` → `%23`, `$` → `%24`, `&` → `%26`, `@` → `%40`, `:` → `%3A`
 
 ### Authentication
 
@@ -86,24 +85,16 @@ production
 
 ## Troubleshooting
 
+### Error: "Environment variable not found: DIRECT_URL"
+- **Cause**: Prisma schema was configured to require DIRECT_URL, but Railway doesn't need it
+- **Fix**: This has been fixed in the latest commit. DIRECT_URL is now optional.
+
 ### Error: "FATAL: (ENOTFOUND) tenant/user postgres.jmfddigrafkxlkooshug not found"
-- **Cause**: DATABASE_URL or DIRECT_URL is malformed or environment variables not set
+- **Cause**: DATABASE_URL is malformed or not set
 - **Fix**: 
-  - Verify both DATABASE_URL and DIRECT_URL are set in Render
-  - Ensure passwords are properly URL-encoded
-  - Check that the connection strings use correct hosts and ports
-
-### Error: "Connection pooler exhausted"
-- **Cause**: Too many active connections
-- **Fix**: Ensure DATABASE_URL uses pgbouncer params (`?pgbouncer=true&connection_limit=1`)
-
-### Error: "permission denied" during migration
-- **Cause**: Database user lacks permissions
-- **Fix**: Verify Supabase project ref and that the connection uses the default postgres user
-
-### Container exits after startup
-- **Cause**: Migration failure or database connection issue during `prisma migrate deploy`
-- **Fix**: Check Render logs → check database connectivity → verify environment variables
+  - For Railway: Let Railway auto-provide DATABASE_URL
+  - For Supabase: Ensure DATABASE_URL uses correct host and port
+  - Verify password is properly URL-encoded if it contains special characters
 
 ## Supabase Project Details
 
