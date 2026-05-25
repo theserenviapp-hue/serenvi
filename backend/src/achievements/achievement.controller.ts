@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Param, UseGuards, Request } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { ClerkGuard } from '../common/clerk.guard';
 import { AchievementService } from './achievement.service';
 
 interface AuthenticatedRequest extends Request {
@@ -7,7 +7,7 @@ interface AuthenticatedRequest extends Request {
 }
 
 @Controller('achievements')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(ClerkGuard)
 export class AchievementController {
   constructor(private achievementService: AchievementService) {}
 

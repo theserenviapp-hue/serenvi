@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { ClerkGuard } from '../common/clerk.guard';
 import { ProductService } from './product.service';
 import { CreateProductDto, UpdateProductDto } from '../common/dtos';
 import { AdminGuard } from '../common/admin.guard';
@@ -18,7 +18,7 @@ export class ProductController {
   }
 
   @Get('all')
-  @UseGuards(AuthGuard('jwt'), AdminGuard)
+  @UseGuards(ClerkGuard, AdminGuard)
   async getAllProducts(
     @Query('skip') skip: string = '0',
     @Query('take') take: string = '50',
@@ -32,7 +32,7 @@ export class ProductController {
   }
 
   @Post()
-  @UseGuards(AuthGuard('jwt'), AdminGuard)
+  @UseGuards(ClerkGuard, AdminGuard)
   async createProduct(@Body() dto: CreateProductDto) {
     return this.productService.createProduct(
       dto.name,
@@ -48,13 +48,13 @@ export class ProductController {
   }
 
   @Put(':id')
-  @UseGuards(AuthGuard('jwt'), AdminGuard)
+  @UseGuards(ClerkGuard, AdminGuard)
   async updateProduct(@Param('id') productId: string, @Body() dto: UpdateProductDto) {
     return this.productService.updateProduct(productId, dto);
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard('jwt'), AdminGuard)
+  @UseGuards(ClerkGuard, AdminGuard)
   async deactivateProduct(@Param('id') productId: string) {
     return this.productService.deactivateProduct(productId);
   }

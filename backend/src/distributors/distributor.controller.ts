@@ -1,10 +1,10 @@
 import { Controller, Get, Put, Param, Body, UseGuards, Query, Post } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { ClerkGuard } from '../common/clerk.guard';
 import { DistributorService } from './distributor.service';
 import { UpdateDistributorDto } from '../common/dtos';
 
 @Controller('distributors')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(ClerkGuard)
 export class DistributorController {
   constructor(private distributorService: DistributorService) {}
 

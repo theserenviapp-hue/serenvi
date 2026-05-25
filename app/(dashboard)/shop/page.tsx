@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardNav } from '@/components/Navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -10,105 +10,59 @@ interface Product {
   name: string;
   description: string;
   price: number;
-  category: 'physical' | 'digital';
-  gender?: 'mens' | 'womens' | 'unisex';
+  type: 'PHYSICAL' | 'DIGITAL';
+  category?: string;
+  gender?: string;
+  imageUrl?: string;
 }
 
-const PRODUCTS: Product[] = [
-  // Physical Products - Mens
-  {
-    id: 'phys-1',
-    name: 'Premium Skincare Bundle',
-    description: 'Complete skincare set with moisturizer, cleanser, and serum for healthy glowing skin',
-    price: 3500,
-    category: 'physical',
-    gender: 'mens',
-  },
-  {
-    id: 'phys-2',
-    name: 'Wireless Bluetooth Earbuds',
-    description: 'High-quality audio experience with noise cancellation and 24-hour battery life',
-    price: 4200,
-    category: 'physical',
-    gender: 'unisex',
-  },
-  {
-    id: 'phys-3',
-    name: 'Luxury Watch Collection',
-    description: 'Elegant timepiece with premium leather strap and water-resistant design',
-    price: 4800,
-    category: 'physical',
-    gender: 'mens',
-  },
-  {
-    id: 'phys-4',
-    name: 'Portable Phone Charger',
-    description: 'Fast charging power bank with 20000mAh capacity and dual USB ports',
-    price: 3200,
-    category: 'physical',
-    gender: 'unisex',
-  },
-  {
-    id: 'phys-5',
-    name: 'Women\'s Premium Jewelry Set',
-    description: 'Elegant jewelry collection with necklace, bracelet, and earrings in 18K gold',
-    price: 5200,
-    category: 'physical',
-    gender: 'womens',
-  },
-  {
-    id: 'phys-6',
-    name: 'Men\'s Leather Wallet',
-    description: 'Genuine leather wallet with RFID protection and multiple card slots',
-    price: 2800,
-    category: 'physical',
-    gender: 'mens',
-  },
-
-  // Digital Products
-  {
-    id: 'digit-1',
-    name: 'Monthly Subscription Plan',
-    description: 'Access to exclusive content, premium features, and priority customer support',
-    price: 3999,
-    category: 'digital',
-    gender: 'unisex',
-  },
-  {
-    id: 'digit-2',
-    name: 'Digital Course Bundle',
-    description: 'Complete training package with video tutorials, certificates, and lifetime access',
-    price: 4500,
-    category: 'digital',
-    gender: 'unisex',
-  },
-  {
-    id: 'digit-3',
-    name: 'Cloud Storage Premium',
-    description: '1TB cloud storage with unlimited file sharing and advanced security features',
-    price: 3800,
-    category: 'digital',
-    gender: 'unisex',
-  },
-  {
-    id: 'digit-4',
-    name: 'Software License',
-    description: 'Professional software license with 1-year updates and technical support included',
-    price: 4900,
-    category: 'digital',
-    gender: 'unisex',
-  },
-];
-
 export default function ShopPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<string | null>(null);
-  const [filterCategory, setFilterCategory] = useState<'physical' | 'digital' | 'all'>('all');
-  const [filterGender, setFilterGender] = useState<'mens' | 'womens' | 'unisex' | 'all'>('all');
+  const [filterCategory, setFilterCategory] = useState<'PHYSICAL' | 'DIGITAL' | 'all'>('all');
+  const [filterGender, setFilterGender] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'name' | 'price-low' | 'price-high'>('name');
 
+  // Fetch products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:3001/products?take=500');
+        if (!response.ok) throw new Error('Failed to fetch products');
+        const data = await response.json();
+        
+        // API returns { products: [...], total: number }
+        const productList = Array.isArray(data.products) ? data.products : data;
+        
+        // Normalize products
+        const normalizedProducts = (Array.isArray(productList) ? productList : []).map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          description: p.description || '',
+          price: parseFloat(p.price),
+          type: p.type || 'PHYSICAL',
+          category: p.category || 'Clothing',
+          gender: p.gender || 'Unisex',
+          imageUrl: p.imageUrl,
+        }));
+        setProducts(normalizedProducts);
+      } catch (err) {
+        console.error('Error fetching products:', err);
+        // Fallback to empty state if API fails
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
   // Filter and sort products
-  const filteredProducts = PRODUCTS.filter((p) => {
-    const categoryMatch = filterCategory === 'all' || p.category === filterCategory;
+  const filteredProducts = products.filter((p) => {
+    const categoryMatch = filterCategory === 'all' || p.type === filterCategory;
     const genderMatch = filterGender === 'all' || p.gender === filterGender;
     return categoryMatch && genderMatch;
   }).sort((a, b) => {
@@ -123,8 +77,8 @@ export default function ShopPage() {
     }
   });
 
-  const physicalProducts = filteredProducts.filter((p) => p.category === 'physical');
-  const digitalProducts = filteredProducts.filter((p) => p.category === 'digital');
+  const physicalProducts = filteredProducts.filter((p) => p.type === 'PHYSICAL');
+  const digitalProducts = filteredProducts.filter((p) => p.type === 'DIGITAL');
 
   const handlePurchase = async (productId: string, productName: string, price: number) => {
     const userId = localStorage.getItem('userId') || 'demo-user';
@@ -171,12 +125,12 @@ export default function ShopPage() {
               <label className="block text-sm font-semibold text-gray-700 mb-2">Category</label>
               <select
                 value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value as 'physical' | 'digital' | 'all')}
+                onChange={(e) => setFilterCategory(e.target.value as 'PHYSICAL' | 'DIGITAL' | 'all')}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="all">All Categories</option>
-                <option value="physical">Physical Products</option>
-                <option value="digital">Digital Products</option>
+                <option value="PHYSICAL">Physical Products</option>
+                <option value="DIGITAL">Digital Products</option>
               </select>
             </div>
 
@@ -185,13 +139,13 @@ export default function ShopPage() {
               <label className="block text-sm font-semibold text-gray-700 mb-2">Gender</label>
               <select
                 value={filterGender}
-                onChange={(e) => setFilterGender(e.target.value as 'mens' | 'womens' | 'unisex' | 'all')}
+                onChange={(e) => setFilterGender(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="all">All Products</option>
-                <option value="mens">Men's</option>
-                <option value="womens">Women's</option>
-                <option value="unisex">Unisex</option>
+                <option value="Male">Men's</option>
+                <option value="Female">Women's</option>
+                <option value="Unisex">Unisex</option>
               </select>
             </div>
 
@@ -212,13 +166,33 @@ export default function ShopPage() {
 
           {/* Results Count */}
           <div className="mt-4 text-sm text-gray-600">
-            Showing <span className="font-semibold text-gray-900">{filteredProducts.length}</span> of{' '}
-            <span className="font-semibold text-gray-900">{PRODUCTS.length}</span> products
+            {loading ? (
+              'Loading products...'
+            ) : (
+              <>
+                Showing <span className="font-semibold text-gray-900">{filteredProducts.length}</span> of{' '}
+                <span className="font-semibold text-gray-900">{products.length}</span> products
+              </>
+            )}
           </div>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="text-center py-12">
+            <p className="text-gray-600">Loading products...</p>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && products.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-600">No products found. Please try again later.</p>
+          </div>
+        )}
+
         {/* Physical Products Section */}
-        {physicalProducts.length > 0 && (
+        {!loading && physicalProducts.length > 0 && (
           <div className="mb-16 p-8 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border-2 border-amber-200">
             <div className="mb-8">
               <h2 className="text-3xl font-bold text-amber-900 flex items-center gap-3">
@@ -233,20 +207,30 @@ export default function ShopPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {physicalProducts.map((product) => (
                 <Card key={product.id} className="flex flex-col h-full hover:shadow-xl transition border-amber-100 bg-white">
+                  {product.imageUrl && (
+                    <img 
+                      src={product.imageUrl} 
+                      alt={product.name} 
+                      className="w-full h-48 object-cover rounded-t-lg mb-4"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  )}
                   <div className="mb-2 flex items-start justify-between">
                     <h3 className="text-lg font-semibold text-gray-900 flex-1">{product.name}</h3>
                     <div className="flex flex-col gap-1 ml-2">
                       <span className="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap">
-                        Physical
+                        {product.type}
                       </span>
                       {product.gender && (
                         <span className="bg-purple-100 text-purple-800 text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap text-center">
-                          {product.gender === 'mens' ? "Men's" : product.gender === 'womens' ? "Women's" : 'Unisex'}
+                          {product.gender}
                         </span>
                       )}
                     </div>
                   </div>
-                  <p className="text-gray-600 text-sm mb-4 flex-grow">{product.description}</p>
+                  <p className="text-gray-600 text-sm mb-4 flex-grow">{product.description.substring(0, 100)}...</p>
                   <div className="border-t border-amber-100 pt-4">
                     <p className="text-2xl font-bold text-amber-600 mb-4">₹{product.price.toLocaleString()}</p>
                     <Button
@@ -264,7 +248,7 @@ export default function ShopPage() {
         )}
 
         {/* Digital Products Section */}
-        {digitalProducts.length > 0 && (
+        {!loading && digitalProducts.length > 0 && (
           <div className="p-8 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border-2 border-blue-200">
             <div className="mb-8">
               <h2 className="text-3xl font-bold text-blue-900 flex items-center gap-3">
@@ -303,7 +287,7 @@ export default function ShopPage() {
         )}
 
         {/* No Results Message */}
-        {filteredProducts.length === 0 && (
+        {!loading && filteredProducts.length === 0 && products.length > 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">No products found matching your filters.</p>
           </div>

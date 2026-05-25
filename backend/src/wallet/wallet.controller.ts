@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { ClerkGuard } from '../common/clerk.guard';
 import { WalletService } from './wallet.service';
 import { RequestWithdrawalDto } from '../common/dtos';
 import { BadRequestException } from '@nestjs/common';
@@ -9,7 +9,7 @@ interface AuthenticatedRequest extends Request {
 }
 
 @Controller('wallet')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(ClerkGuard)
 export class WalletController {
   constructor(private walletService: WalletService) {}
 

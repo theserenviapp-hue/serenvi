@@ -1,15 +1,33 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@clerk/clerk-react';
 
-const PrivateRoute: React.FC<{ component: React.ComponentType<any> }> = ({
+interface PrivateRouteProps {
+  component: React.ComponentType<any>;
+  adminOnly?: boolean;
+}
+
+const PrivateRoute: React.FC<PrivateRouteProps> = ({
   component: Component,
+  adminOnly = false,
 }) => {
-  const navigate = useNavigate();
-  const token = localStorage.getItem('access_token');
+  const { isLoaded, isSignedIn } = useAuth();
+  const isAdmin = localStorage.getItem('isAdmin') === 'true';
 
-  if (!token) {
-    navigate('/login');
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isSignedIn) {
     return null;
+  }
+
+  if (adminOnly && !isAdmin) {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center', color: 'red' }}>
+        <h1>Access Denied</h1>
+        <p>You don't have permission to access this page.</p>
+      </div>
+    );
   }
 
   return <Component />;

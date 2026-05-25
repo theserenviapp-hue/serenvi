@@ -8,10 +8,8 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  // directUrl is only needed for connection poolers (e.g., Supabase with pgbouncer)
-  // For Railway or direct PostgreSQL, use only DATABASE_URL
-  // Uncomment below if using Supabase:
-  // directUrl = env("DIRECT_URL")
+  // directUrl is REQUIRED for Supabase migrations (uses session pooler, not transaction pooler)
+  directUrl = env("DIRECT_URL")
 }
 
 // ===========================

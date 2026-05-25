@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ClerkProvider, SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react';
 import Layout from './components/Common/Layout';
 import PrivateRoute from './components/Common/PrivateRoute';
 import Login from './pages/Login';
@@ -18,55 +19,84 @@ import UserProfile from './pages/UserProfile';
 import Admin from './pages/Admin';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import TokenSync from './components/Common/TokenSync';
+import MeBoot from './components/Common/MeBoot';
 
-const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    !!localStorage.getItem('access_token'),
-  );
+const clerkPubKey = process.env.REACT_APP_CLERK_PUBLISHABLE_KEY;
 
-  useEffect(() => {
-    const handleStorageChange = () => {
-      setIsAuthenticated(!!localStorage.getItem('access_token'));
-    };
+if (!clerkPubKey) {
+  throw new Error('REACT_APP_CLERK_PUBLISHABLE_KEY is not set');
+}
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-  if (isAuthenticated) {
-    return (
-      <Router>
-        <Layout>
-          <Routes>
-            <Route path="/dashboard" element={<PrivateRoute component={Dashboard} />} />
-            <Route path="/achievements" element={<PrivateRoute component={Achievements} />} />
-            <Route path="/wallet" element={<PrivateRoute component={Wallet} />} />
-            <Route path="/shop" element={<PrivateRoute component={Shop} />} />
-            <Route path="/product/:id" element={<PrivateRoute component={ProductDetail} />} />
-            <Route path="/cart" element={<PrivateRoute component={Cart} />} />
-            <Route path="/checkout" element={<PrivateRoute component={Checkout} />} />
-            <Route path="/team" element={<PrivateRoute component={Team} />} />
-            <Route path="/history" element={<PrivateRoute component={History} />} />
-            <Route path="/settings" element={<PrivateRoute component={Settings} />} />
-            <Route path="/profile/:id" element={<PrivateRoute component={UserProfile} />} />
-            <Route path="/admin" element={<PrivateRoute component={Admin} />} />
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
-        </Layout>
-      </Router>
-    );
-  }
-
+function AppContent() {
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route
+          path="/login"
+          element={
+            <SignedOut>
+              <Login />
+            </SignedOut>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <SignedOut>
+              <Register />
+            </SignedOut>
+          }
+        />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/" element={<Navigate to="/login" replace />} />
+
+        <Route
+          path="/*"
+          element={
+            <SignedIn>
+              <TokenSync />
+              <MeBoot>
+                <Layout>
+                  <Routes>
+                    <Route path="/dashboard" element={<PrivateRoute component={Dashboard} />} />
+                    <Route path="/achievements" element={<PrivateRoute component={Achievements} />} />
+                    <Route path="/wallet" element={<PrivateRoute component={Wallet} />} />
+                    <Route path="/shop" element={<PrivateRoute component={Shop} />} />
+                    <Route path="/product/:id" element={<PrivateRoute component={ProductDetail} />} />
+                    <Route path="/cart" element={<PrivateRoute component={Cart} />} />
+                    <Route path="/checkout" element={<PrivateRoute component={Checkout} />} />
+                    <Route path="/team" element={<PrivateRoute component={Team} />} />
+                    <Route path="/history" element={<PrivateRoute component={History} />} />
+                    <Route path="/settings" element={<PrivateRoute component={Settings} />} />
+                    <Route path="/profile/:id" element={<PrivateRoute component={UserProfile} />} />
+                    <Route path="/admin" element={<PrivateRoute component={Admin} adminOnly={true} />} />
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                  </Routes>
+                </Layout>
+              </MeBoot>
+            </SignedIn>
+          }
+        />
+
+        <Route
+          path="*"
+          element={
+            <SignedOut>
+              <RedirectToSignIn />
+            </SignedOut>
+          }
+        />
       </Routes>
     </Router>
+  );
+}
+
+const App: React.FC = () => {
+  return (
+    <ClerkProvider publishableKey={clerkPubKey}>
+      <AppContent />
+    </ClerkProvider>
   );
 };
 

@@ -1,5 +1,5 @@
 import { Controller, Post, Get, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { ClerkGuard } from '../common/clerk.guard';
 import { SalesService } from './sales.service';
 import { CreateSaleDto } from '../common/dtos';
 
@@ -8,7 +8,7 @@ interface AuthenticatedRequest extends Request {
 }
 
 @Controller('sales')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(ClerkGuard)
 export class SalesController {
   constructor(private salesService: SalesService) {}
 

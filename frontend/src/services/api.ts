@@ -1,19 +1,8 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
-interface AuthResponse {
-  access_token: string;
-  distributor: {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-    rank: string;
-    referralCode: string;
-  };
-}
-
 class ApiClient {
   private client: AxiosInstance;
+  private tokenGetter: (() => Promise<string | null>) | null = null;
 
   constructor() {
     const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
@@ -23,11 +12,17 @@ class ApiClient {
       headers: { 'Content-Type': 'application/json' },
     });
 
-    // Attach authorization header
-    this.client.interceptors.request.use((config) => {
-      const token = localStorage.getItem('access_token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+    // Attach Clerk JWT token to every request
+    this.client.interceptors.request.use(async (config) => {
+      if (this.tokenGetter) {
+        try {
+          const token = await this.tokenGetter();
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+          }
+        } catch (err) {
+          console.error('Failed to get token:', err);
+        }
       }
       return config;
     });
@@ -37,49 +32,27 @@ class ApiClient {
       (response) => response,
       (error: AxiosError) => {
         if (error.response?.status === 401) {
-          localStorage.removeItem('access_token');
-          window.location.href = '/login';
+          // 401 will be handled by Clerk's <SignedOut> component
+          localStorage.removeItem('distributorId');
+          localStorage.removeItem('isAdmin');
         }
         return Promise.reject(error);
       }
     );
   }
 
-  // AUTH ENDPOINTS
-  async register(
-    email: string,
-    password: string,
-    name: string,
-    phone: string,
-    sponsorId?: string
-  ): Promise<AuthResponse> {
-    const { data } = await this.client.post('/auth/register', {
-      email,
-      password,
-      name,
-      phone,
-      sponsorId,
-    });
-    localStorage.setItem('access_token', data.access_token);
-    localStorage.setItem('distributorId', data.distributor.id);
-    return data;
-  }
-
-  async login(email: string, password: string): Promise<AuthResponse> {
-    const { data } = await this.client.post('/auth/login', { email, password });
-    localStorage.setItem('access_token', data.access_token);
-    localStorage.setItem('distributorId', data.distributor.id);
-    return data;
+  setTokenGetter(getter: () => Promise<string | null>) {
+    this.tokenGetter = getter;
   }
 
   // GENERIC METHODS
-  async post(endpoint: string, payload: any) {
+  async post(endpoint: string, payload?: any) {
     const { data } = await this.client.post(endpoint, payload);
     return { data };
   }
 
-  async get(endpoint: string) {
-    const { data } = await this.client.get(endpoint);
+  async get(endpoint: string, config?: any) {
+    const { data } = await this.client.get(endpoint, config);
     return { data };
   }
 
@@ -91,6 +64,21 @@ class ApiClient {
   async delete(endpoint: string) {
     const { data } = await this.client.delete(endpoint);
     return { data };
+  }
+
+  // USER ENDPOINTS
+  async getMe() {
+    const { data } = await this.client.get('/me');
+    return data;
+  }
+
+  async completeOnboarding(name: string, phone: string, referralCode?: string) {
+    const { data } = await this.client.post('/me/onboarding', {
+      name,
+      phone,
+      referralCode,
+    });
+    return data;
   }
 
   async getProfile(distributorId: string) {
@@ -178,5 +166,5 @@ class ApiClient {
   }
 }
 
-const apiClient = new ApiClient();
-export default apiClient;
+export const api = new ApiClient();
+export default api;

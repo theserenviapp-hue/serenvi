@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useClerk } from '@clerk/clerk-react';
 import { Menu, X } from 'lucide-react';
 
 interface LayoutProps {
@@ -10,10 +11,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { signOut } = useClerk();
 
-  const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    navigate('/login');
+  const handleLogout = async () => {
+    localStorage.removeItem('distributorId');
+    localStorage.removeItem('isAdmin');
+    try {
+      await signOut();
+      navigate('/login');
+    } catch (err) {
+      console.error('Logout error:', err);
+      navigate('/login');
+    }
   };
 
   const isActive = (path: string) => {
@@ -22,10 +31,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const isAdmin = (() => {
     try {
-      const token = localStorage.getItem('access_token');
-      if (!token) return false;
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.isAdmin === true;
+      return localStorage.getItem('isAdmin') === 'true';
     } catch {
       return false;
     }
