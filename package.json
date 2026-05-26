@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "echo 'Use: cd backend && npm run start:dev'",
+    "build": "echo 'Use: cd backend && npm run build'",
+    "start": "echo 'Use: cd backend && npm run start:prod'",
+    "lint": "echo 'Linting disabled in root'"
   },
   "dependencies": {
     "@clerk/nextjs": "latest",
