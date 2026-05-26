@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
         wallet: user.wallet,
         directReferrals: user.referrals.length,
         totalPurchases: user.products.length,
-        totalBonuses: user.bonuses.reduce((sum, b) => sum + b.amount, 0),
+        totalBonuses: user.bonuses.reduce((sum: number, b: any) => sum + b.amount, 0),
       },
     });
   } catch (error) {

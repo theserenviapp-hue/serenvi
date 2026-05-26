@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       total: 0,
     };
 
-    bonuses.forEach((bonus) => {
+    bonuses.forEach((bonus: any) => {
       if (bonus.type === 'FAST_TRACK') summary.fastTrack += bonus.amount;
       if (bonus.type === 'STEP_UP') summary.stepUp += bonus.amount;
       if (bonus.type === 'TALENT_DIVIDEND') summary.talentDividend += bonus.amount;
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         summary,
-        bonuses: bonuses.map((b) => ({
+        bonuses: bonuses.map((b: any) => ({
           id: b.id,
           type: b.type,
           amount: b.amount,

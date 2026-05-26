@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 export default function WalletPage() {
   const [wallet, setWallet] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string>('demo-user');
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [bankDetails, setBankDetails] = useState({
     accountNumber: '',
@@ -16,11 +17,14 @@ export default function WalletPage() {
     accountHolder: '',
   });
 
-  const userId = localStorage.getItem('userId') || 'demo-user';
+  useEffect(() => {
+    const storedUserId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
+    setUserId(storedUserId || 'demo-user');
+  }, []);
 
   useEffect(() => {
     fetchWallet();
-  }, []);
+  }, [userId]);
 
   const fetchWallet = async () => {
     try {

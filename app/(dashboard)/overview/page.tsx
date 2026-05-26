@@ -11,7 +11,11 @@ export default function OverviewPage() {
 
   useEffect(() => {
     // In production, get userId from auth context
-    const userId = localStorage.getItem('userId') || 'demo-user';
+    const userId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
     
     fetch(`/api/members/me?userId=${userId}`)
       .then((res) => res.json())

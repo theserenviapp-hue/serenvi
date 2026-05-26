@@ -52,7 +52,7 @@ export default function AchievementsPage() {
 
   const fetchAchievements = async () => {
     try {
-      const token = localStorage.getItem('access_token');
+      const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
       if (!token) {
         setLoading(false);
         return;
@@ -78,7 +78,7 @@ export default function AchievementsPage() {
   const claimAchievement = async (rankName: string) => {
     try {
       setClaiming(rankName);
-      const token = localStorage.getItem('access_token');
+      const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
       if (!token) return;
 
       const response = await fetch(`http://localhost:3001/achievements/claim/${rankName}`, {

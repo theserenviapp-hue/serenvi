@@ -9,17 +9,26 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@clerk/nextjs": "latest",
+    "@prisma/client": "^7.8.0",
+    "@supabase/supabase-js": "^2.42.0",
+    "bcrypt": "^5.1.1",
+    "csv-parse": "^5.5.3",
+    "date-fns": "^2.30.0",
     "next": "16.1.6",
+    "razorpay": "^2.9.2",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/bcrypt": "^5.0.2",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "prisma": "^7.8.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

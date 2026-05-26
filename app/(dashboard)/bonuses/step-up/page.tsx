@@ -10,10 +10,15 @@ export default function StepUpPage() {
   const [bonuses, setBonuses] = useState<any[]>([]);
   const [summary, setSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
-  const userId = localStorage.getItem('userId') || 'demo-user';
+  const [userId, setUserId] = useState<string>('demo-user');
 
   useEffect(() => {
+    const storedUserId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
+    setUserId(storedUserId || 'demo-user');
+  }, []);
+
+  useEffect(() => {
+    if (!userId || userId === 'demo-user') return;
     fetch(`/api/bonuses?userId=${userId}`)
       .then((res) => res.json())
       .then((data) => {
@@ -27,7 +32,7 @@ export default function StepUpPage() {
         console.error(err);
         setLoading(false);
       });
-  }, []);
+  }, [userId]);
 
   return (
     <>

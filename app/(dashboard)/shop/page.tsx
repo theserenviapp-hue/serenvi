@@ -81,7 +81,8 @@ export default function ShopPage() {
   const digitalProducts = filteredProducts.filter((p) => p.type === 'DIGITAL');
 
   const handlePurchase = async (productId: string, productName: string, price: number) => {
-    const userId = localStorage.getItem('userId') || 'demo-user';
+    const userId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
+    if (!userId) return;
     setPurchasing(productId);
 
     try {
