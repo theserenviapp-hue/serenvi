@@ -23,8 +23,8 @@ RUN npx prisma generate
 # Build the application
 RUN npm run build
 
-# Remove dev dependencies
-RUN npm prune --production
+# Keep all dependencies (needed for prisma migrate deploy at startup)
+# Do not prune - prisma CLI is required for production migrations
 
 # Expose port
 EXPOSE 3001
