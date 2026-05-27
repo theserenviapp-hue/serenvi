@@ -23,12 +23,8 @@ RUN npx prisma generate
 # Build the application
 RUN npm run build
 
-# Copy startup script
-COPY start-prod.sh /app/start-prod.sh
-RUN chmod +x /app/start-prod.sh
-
 # Expose port
 EXPOSE 3001
 
-# Start the application using production startup script
-CMD ["/app/start-prod.sh"]
+# Start the application (uses start-prod script in package.json which calls scripts/start-prod.js)
+CMD ["npm", "run", "start:prod"]
