@@ -23,11 +23,12 @@ RUN npx prisma generate
 # Build the application
 RUN npm run build
 
-# Keep all dependencies (needed for prisma migrate deploy at startup)
-# Do not prune - prisma CLI is required for production migrations
+# Copy startup script
+COPY start-prod.sh /app/start-prod.sh
+RUN chmod +x /app/start-prod.sh
 
 # Expose port
 EXPOSE 3001
 
-# Start the application using production startup
-CMD ["npm", "run", "start:prod"]
+# Start the application using production startup script
+CMD ["/app/start-prod.sh"]

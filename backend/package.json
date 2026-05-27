@@ -12,7 +12,7 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node -e \"if (process.env.DATABASE_URL) { try { require('child_process').execSync('npx prisma migrate deploy', { stdio: 'inherit' }); } catch(e) { console.warn('⚠️  Prisma migration failed - starting app anyway:', e.message); } } else { console.warn('⚠️  DATABASE_URL not set - skipping migrations'); }\" && node dist/main",
+    "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
