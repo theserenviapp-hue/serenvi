@@ -17,7 +17,6 @@ coverage
 .eslintignore
 jest.config.js
 test
-scripts
 data
 *.log
 .next
