@@ -39,7 +39,7 @@ async function runMigrations() {
 
     try {
       // Run migration with full output
-      execSync('npx prisma migrate deploy --skip-generate', {
+      execSync('npx prisma migrate deploy', {
         stdio: 'inherit',
         env: { ...process.env }
       });
