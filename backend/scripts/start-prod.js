@@ -23,7 +23,7 @@ console.log();
 if (!databaseUrl) {
   console.warn('⚠️  DATABASE_URL is not set - skipping migrations');
   console.log('⏳ Starting app without database...\n');
-  const mainPath = path.join(__dirname, '../dist/main');
+  const mainPath = path.join(__dirname, '../dist/main.js');
   require(mainPath);
   return;
 }
@@ -65,7 +65,7 @@ async function runMigrations() {
 runMigrations().then(() => {
   console.log('✅ Starting NestJS application...\n');
   // Use proper path resolution - script is in /app/scripts/, built code is in /app/dist/
-  const mainPath = path.join(__dirname, '../dist/main');
+  const mainPath = path.join(__dirname, '../dist/main.js');
   require(mainPath);
 }).catch((error) => {
   console.error('❌ Fatal error during startup:', error);
